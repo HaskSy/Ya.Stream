@@ -1,0 +1,16 @@
+{
+    "name": "Ya.Stream",
+    "description": "Listen music together",
+    "version": "1.0",
+    "manifest_version": 3,
+    "icons": {},
+    "action": {
+        "default_popup":"popup.html"
+    },
+    "permissions": [
+        "storage"
+    ],
+    "background":{
+        "service_worker": "main.js"
+    }
+}
