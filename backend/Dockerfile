@@ -2,7 +2,7 @@ FROM gradle:8.4.0-jdk17-alpine AS cache
 RUN mkdir -p /home/gradle/cache_home
 ENV GRADLE_USER_HOME /home/gradle/cache_home
 COPY build.gradle /home/gradle/src/
-COPY src/main/resources /home/gradle/src/src/main/resources
+COPY src/main/resources/static/api /home/gradle/src/src/main/resources/static/api
 WORKDIR /home/gradle/src/
 RUN gradle clean build -i --stacktrace
 

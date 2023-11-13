@@ -85,7 +85,7 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 tasks.create("openApiGenerate_API", GenerateTask.class, {
     generatorName = "spring"
-    inputSpec = "$rootDir/src/main/resources/static/api.yaml".toString()
+    inputSpec = "$rootDir/src/main/resources/static/api/api.yaml".toString()
     outputDir = "$buildDir/generated/openapi".toString()
     apiPackage = "com.gvsem.ya_stream.api"
     modelPackage = "com.gvsem.ya_stream.dto"
