@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+
+  server:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:file:./data/db
+    user: root
+    restart:
+      unless-stopped
+    volumes:
+      - ./data:/home/app/data
+    ports:
+      - "7001:7001"
