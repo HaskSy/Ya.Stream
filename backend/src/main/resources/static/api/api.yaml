@@ -29,17 +29,13 @@ paths:
     post:
       tags:
         - auth
-      summary: Stores tokens and essential information for last login of user
-      description: Used by frontend. Frontend opens :blank window with Yandex.Id Auth. Callbacks essential data into request body of this request. Backend stores it in H2
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Login'
-        required: true
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
   /auth/redirect:
     get:
       tags:
@@ -151,6 +147,18 @@ components:
         yadnexId:
           type: string
           example: "myyandexid"
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        yandexId:
+          type: string
+          example: "myyandexid"
+        token:
+          type: string
+          example: "Bearer 823jd38JGhgds82f4FJ"
     ListenEvent:
       format: event-stream
       type: object
@@ -162,9 +170,8 @@ components:
           type: object
 
   securitySchemes:
-    BasicAuth:
+    BearerAuth:
       type: http
-      scheme: basic
-
+      scheme: bearer
 security:
-  - BasicAuth: []
+  - BearerAuth: []
