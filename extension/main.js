@@ -1,8 +1,8 @@
+const chromeLocalStorage = chrome.storage.local
+
 function init() {
-    const chromeLocalStorage = chrome.storage.local
-    
     chromeLocalStorage.get(["history"], (history) => {
-        if (history === undefined || !history) {
+        if (history === {} || !history['history']) {
             chromeLocalStorage.set({"history": []})
         }
     })
