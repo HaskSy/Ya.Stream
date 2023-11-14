@@ -1,0 +1,4 @@
+{
+	"baseApiUrl": "http://localhost:7001/api/v1",
+	"authTokenStorageLocation": "authToken"
+}
