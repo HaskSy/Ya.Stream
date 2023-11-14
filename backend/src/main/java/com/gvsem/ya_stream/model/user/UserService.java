@@ -25,6 +25,10 @@ public class UserService {
         return userRepository.findByYandexLogin(yandexLogin);
     }
 
+    public Optional<User> authenticateByToken(String token) {
+        return userRepository.findByToken(token);
+    }
+
     public User authenticateByYandexToken(@NotNull String yandexToken) throws NotAuthorizedException {
         YandexUserDto yandexUser = verifyYandexUserIdentity(yandexToken).orElseThrow(() -> new NotAuthorizedException("Yandex identity failed to verify"));
         User user = userRepository.findById(yandexUser.id()).orElse(null);

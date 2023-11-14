@@ -6,56 +6,30 @@ info:
     
     Some useful links:
     - [Ya.Stream repository](https://github.com/HaskSy/Ya.Stream)
-  # termsOfService: http://swagger.io/terms/
-  # contact:
-  #   email: @example.com
-  # license:
-  #   name: Apache 2.0
-  #   url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 servers:
-  - url: https://music.gvsem.com/api/v1
+  - url: https://music.gvsem.com/api/
 tags:
-  - name: auth
-    description: User Auth
   - name: listen
     description: SSE listener of streamer's actions
   - name: stream
     description: Streamer actions
-  - name: users
-    description: CRUD for User database
 paths:
-  /auth/login:
-    post:
-      tags:
-        - auth
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDto'
-  /auth/redirect:
+
+  /listen/{yandex_login}:
     get:
-      tags:
-        - auth
-      responses:
-        '200':
-          description: Successful operation
-          
-  /listen/{user_id}:
-    get:
+      operationId: listenToUserId
       tags:
         - listen
-      summary: SSE subscribtion to audio of specified user
+      summary: SSE subscription to audio of specified user
+      description: NO AUTHENTICATION IS REQUIRED FOR THIS METHOD
       parameters:
         - in: path
-          name: user_id
+          name: yandex_login
           required: true
           schema:
             type: string
-          description: The user ID
+          description: yandex_login
       responses:
         '200':
           description: Successful operation
@@ -63,115 +37,61 @@ paths:
             text/event-stream:
               schema:
                 $ref: '#/components/schemas/ListenEvent'
-                
-  
+        '404':
+          description: User does not exist or does not stream right now
+
   /stream:
     get:
+      security:
+        - BearerAuth : []
       parameters:
         - in: query
           name: event
-          description: Actions which user can perform
           required: true
           schema:
             type: string
-            enum: [play, stop, next, prev, goto]
+            enum: [play, stop, goto]
         - in: query
-          name: payload
-          description: Payload
+          name: track_id
+          description: track id in Yandex.Music for play, stop, goto
           required: false
           schema:
-            type: object
-      tags:
-        - stream
-      summary: Sends the last action of a streamer
-      description: Sends the last action of a streamer to server for the purpose of noticing it's subscribers
-      responses:
-        '200':
-          description: Successful operation
-      
-  # /users:
-  #   get:
-  #     tags:
-  #       - users
-  #     parameters:
-  #       - in: query
-  #         name: s
-  #         schema:
-  #           type: string
-  #         description: Search prompt send by user. If empty then does nothing
-  #     responses:
-  #       '200':
-  #         description: Successful operation
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 users:
-  #                   type: array
-  #                   items:
-  #                     $ref: '#/components/schemas/User'
-                      
-  /users/{user_id}:
-    get:
-      tags:
-        - users
-      parameters:
-        - in: path
-          name: user_id
-          required: true
+            type: string
+        - in: query
+          name: position
+          description: current player position for event for play, stop, goto
+          required: false
           schema:
             type: string
-          description: The user ID
+      tags:
+        - stream
+      summary: Send recent user's action while interacting with music player
       responses:
-        '200':
+        '201':
           description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
           
 components:
   schemas:
-    Login:
-      type: object
-      properties:
-        yandexId:
-          type: string
-          example: "myyandexid"
-        yandexIdToken:
-          type: string
-    User:
-      type: object
-      properties:
-        yadnexId:
-          type: string
-          example: "myyandexid"
-    UserDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        yandexId:
-          type: string
-          example: "myyandexid"
-        token:
-          type: string
-          example: "Bearer 823jd38JGhgds82f4FJ"
+
     ListenEvent:
       format: event-stream
       type: object
       properties:
         event:
           type: string
+          nullable: false
           enum: [play, stop, next, prev, goto]
-        payload:
-          type: object
+        track_id:
+          type: string
+          nullable: false
+        position:
+          type: string
 
   securitySchemes:
     BearerAuth:
-      type: http
-      scheme: bearer
-security:
-  - BearerAuth: []
+      type: apiKey
+      in: header
+      name: Authorization
+
+#security:
+#  - BearerAuth: []
