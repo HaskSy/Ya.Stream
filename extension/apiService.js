@@ -1,4 +1,4 @@
-const config = require("./config.json");
+import config from './config.json' assert { type: "json" };
 
 const baseApiUrl = config.baseApiUrl;
 const authTokenStorage = config.authTokenStorageLocation;
