@@ -22,6 +22,8 @@ public class SseBus {
             emitters.put(yandexLogin, Collections.synchronizedSet(new HashSet<>()));
         }
 
+        System.out.println("new subscriber for: " + yandexLogin);
+
         emitters.get(yandexLogin).add(emitter);
 
         emitter.onCompletion(() -> {
@@ -37,6 +39,7 @@ public class SseBus {
     private final ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public void send(Event event, User user) {
+        System.out.println("going to broadcast from user: " + user.getYandexLogin() + " for " + this.emitters.getOrDefault(user.getYandexLogin(), new HashSet<>()).size());
         List<SseEmitter> failedEmitters = new ArrayList<>();
         var es = this.emitters.get(user.getYandexLogin());
         if (es == null) {
@@ -45,8 +48,10 @@ public class SseBus {
         es.forEach(emitter -> {
             cachedThreadPool.execute(() -> {
                 try {
+                    System.out.println("going to broadcast message to sse_emitter");
                     emitter.send(eventAsString(event));
                 } catch (Exception e) {
+                    e.printStackTrace();
                     emitter.completeWithError(e);
                     failedEmitters.add(emitter);
                 }
