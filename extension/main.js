@@ -19,3 +19,5 @@ const token = console.log(urlParams.get('token'));
 if (token != null) {
     chrome.storage.local()
 }
+
+init()
