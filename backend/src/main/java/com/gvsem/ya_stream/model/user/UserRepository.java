@@ -6,6 +6,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByYandexId(String yandexId);
+    Optional<User> findByYandexLogin(String yandexLogin);
 
 }

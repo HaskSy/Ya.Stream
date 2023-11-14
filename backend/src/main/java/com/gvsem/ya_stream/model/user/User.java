@@ -6,31 +6,24 @@ import org.hibernate.Hibernate;
 import jakarta.persistence.*;
 import java.util.Objects;
 
-@Getter
-@Setter
-@Builder
 @Entity
-@Table(
-        name = "_user",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "user_yandex_id_unique", columnNames = "yandex_id"),
-                @UniqueConstraint(name = "user_yandex_token_unique", columnNames = "yandex_token"),
-                @UniqueConstraint(name = "user_token_unique", columnNames = "token"),
-        }
-)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@Table(name = "_user")
 public class User {
+
+    public User() {
+
+    }
+
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "yandex_id", nullable = false)
+    @Getter() @Setter()
     private Long id;
 
-    @Column(name = "yandex_id", nullable = false)
-    private String yandexId;
+    @Column(name = "yandex_login", nullable = false)
+    @Getter() @Setter()
+    private String yandexLogin;
 
-    @Column(name = "yandex_token", nullable = false)
-    private String yandexToken;
-
+    @Getter() @Setter()
     @Column(name = "token", nullable = false)
     private String token;
 
