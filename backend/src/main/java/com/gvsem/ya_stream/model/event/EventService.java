@@ -33,5 +33,9 @@ public class EventService {
         return this.eventRepository.save(event);
     }
 
+    public Optional<Event> lastEventOf(@NotNull User user) {
+        return this.eventRepository.findTopByUserOrderByCreationDateDesc(user);
+    }
+
 
 }

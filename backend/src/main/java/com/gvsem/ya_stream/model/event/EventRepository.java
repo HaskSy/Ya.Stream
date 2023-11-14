@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    Optional<Event> findByUserOrderByCreationDateDesc(User user);
+    Optional<Event> findTopByUserOrderByCreationDateDesc(User user);
 
 }

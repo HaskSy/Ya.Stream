@@ -1,11 +1,15 @@
 package com.gvsem.ya_stream.controller;
 
 import com.gvsem.ya_stream.model.event.Event;
+import com.gvsem.ya_stream.model.event.EventService;
 import com.gvsem.ya_stream.model.user.User;
+import com.gvsem.ya_stream.model.user.UserService;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +18,12 @@ import java.util.concurrent.Executors;
 
 @Component
 public class SseBus {
+
+    @Autowired
+    EventService eventService;
+
+    @Autowired
+    UserService userService;
 
     private final Map<String, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
@@ -25,6 +35,16 @@ public class SseBus {
         System.out.println("new subscriber for: " + yandexLogin);
 
         emitters.get(yandexLogin).add(emitter);
+
+        userService.getUserByYandexLogin(yandexLogin).ifPresent((user) -> {
+            eventService.lastEventOf(user).ifPresent((event) -> {
+                try {
+                    emitter.send(eventAsString(event));
+                } catch (IOException ignored) {
+                }
+            });
+        });
+
 
         emitter.onCompletion(() -> {
             this.emitters.get(yandexLogin).remove(emitter);
@@ -48,10 +68,8 @@ public class SseBus {
         es.forEach(emitter -> {
             cachedThreadPool.execute(() -> {
                 try {
-                    System.out.println("going to broadcast message to sse_emitter");
                     emitter.send(eventAsString(event));
                 } catch (Exception e) {
-                    e.printStackTrace();
                     emitter.completeWithError(e);
                     failedEmitters.add(emitter);
                 }
