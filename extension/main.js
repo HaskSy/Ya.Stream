@@ -20,11 +20,4 @@ if (token != null) {
     chrome.storage.local()
 }
 
-const urlParams = new URLSearchParams(window.location.search);
-const token = console.log(urlParams.get('token'));
-
-if (token != null) {
-    chrome.storage.local()
-}
-
 init()
