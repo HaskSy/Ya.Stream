@@ -11,6 +11,7 @@
         "storage"
     ],
     "background":{
-        "service_worker": "main.js"
+        "service_worker": "main.js",
+        "type": "module"
     }
 }
