@@ -13,11 +13,11 @@ const actionsEnum = {
 	GOTO: 'goto'
 }
 
-async function login(username, password) {
+async function login(yandexId, yandexIdToken) {
 	const url = `${baseApiUrl}/auth/login`;
 	const payload = {
-		yandexId: username,
-		yandexIdToken: password,
+		yandexId: yandexId,
+		yandexIdToken: yandexIdToken,
 	};
 
 	const response = await fetch(url, {
