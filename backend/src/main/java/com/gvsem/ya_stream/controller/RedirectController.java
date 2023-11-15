@@ -21,11 +21,9 @@ public class RedirectController {
     UserService userService;
 
     @GetMapping("/redirect")
-    RedirectView redirect(HttpServletResponse response, @NotNull @RequestParam("access_token") String token) {
+    RedirectView redirect(@NotNull @RequestParam("access_token") String token) {
         User user = this.userService.authenticateByYandexToken(token);
-        Cookie cookie = new Cookie("redirect_token", user.getToken());
-        response.addCookie(cookie);
-        return new RedirectView("/finalredirect.html");
+        return new RedirectView("/finalredirect.html?token=" + user.getToken());
     }
 
 }
