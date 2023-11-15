@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -17,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Component
+@Transactional
 public class SseBus {
 
     @Autowired

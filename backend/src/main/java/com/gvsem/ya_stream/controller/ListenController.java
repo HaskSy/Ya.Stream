@@ -12,10 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.transaction.Transactional;
+
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 
 @RestController()
+@Transactional
 public class ListenController {
 
     @Autowired
