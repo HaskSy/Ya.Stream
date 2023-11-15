@@ -7,6 +7,11 @@
 </body>
 
 <script type="text/javascript">
-    document.location = decodeURIComponent(localStorage.getItem("extension-redirect")) + "?" + document.URL.split("?")[1];
+
+    console.log(localStorage.getItem("extension-redirect"));
+    console.log(decodeURIComponent(localStorage.getItem("extension-redirect")));
+    console.log(decodeURIComponent(localStorage.getItem("extension-redirect")) + "?" + document.URL.split("?")[1]);
+
+    //document.location = decodeURIComponent(localStorage.getItem("extension-redirect")) + "?" + document.URL.split("?")[1];
 </script>
 </html>
