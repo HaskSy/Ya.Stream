@@ -52,7 +52,7 @@ const not_auth_display = document.getElementById("if_not_auth");
 // TODO DELETE
 const btn_test_play = document.getElementById("test_play")
 const btn_test_stop = document.getElementById("test_stop")
-const btn_test_goto_35s = document.getElementById("test_goto_10")
+const btn_test_goto_35s = document.getElementById("test_goto_35")
 const btn_test_goto_0s = document.getElementById("test_goto_0")
 // END DELETE
 
