@@ -91,11 +91,11 @@ class State {
 	}
 }
 
-function ui_notifyStartListening(user_id)
+function ui_notifyStartListening(userId)
 {
 	switcher.checked = false;
-	status_description.innerText = "Now listening " + user_id;
-	rearrangeBtns(user_id);
+	status_description.innerText = "Now listening " + userId;
+	rearrangeBtns(userId);
 	listen_button.textContent = "Stop listening";
 	listen_button.style.background = "linear-gradient(#e10101, #e10101)";
 }
@@ -256,17 +256,17 @@ async function login() {
  * @param {string} userId 
  * @returns {EventSource}
  */
-function createEventSourceListener(userId) {
+async function createEventSourceListener(userId) {
 	const url = `${config.baseApiUrl}/listen/${userId}`;
 	const eventSource = new EventSource(url);
 	return eventSource;
 }
 
-/**
+/*
  * Sends event to backend for further broadcasting to subscribers
  * @param {ActionEvent} actionEvent 
  */
-function sendStreamerEvent(actionEvent) {
+async function sendStreamerEvent(actionEvent) {
 	const url = `${config.baseApiUrl}/stream`;
 	const params = new URLSearchParams({
 		event: actionEvent.action,
@@ -274,9 +274,13 @@ function sendStreamerEvent(actionEvent) {
 		position: actionEvent.position
 	});
 
+	const authToken = await State.getAuthenticated()
+	console.log(authToken)
+	try {
+
 	fetch(`${url}?${params}`, {
 		headers: {
-			Authorization: State.getAuthenticated(),
+			Authorization: authToken,
 			"Content-Type": "application/json",
 		},
 	})
@@ -284,6 +288,12 @@ function sendStreamerEvent(actionEvent) {
 	  	if (!response.ok) {
 			if (response.status === 401) {
 				State.setAuthenticated(null)
+				normal_display.style.display = "none"
+				not_auth_display.style.display = "block"
+				ListenerService.stopListening()
+				StreamerService.stopStreaming()
+				ui_notifyStopStreaming()
+				ui_notifyStopListening()
 			} else {
 				throw new Error(`HTTP error while broadcastng event! Status: ${response.status}`);
 			}
@@ -293,6 +303,10 @@ function sendStreamerEvent(actionEvent) {
 	.catch(error => {
 	  	console.error('ActionEvent fetching error:', error);
 	});
+	} catch (err) {
+		console.error("FoundError")
+		console.log(err)
+	}
 }
 
 /** // -------------------- api-service.js -------------------- */
@@ -352,10 +366,10 @@ class ListenerService {
 		StreamerService.stopStreaming()
 	  	this.stopListening();
 		this.currentUser = userId
-		this.listenedSource = createEventSourceListener(userId)
+		this.listenedSource = await createEventSourceListener(userId)
 		this.#setListeners();
 		State.setIsListening(userId)
-		ui_notifyStartListening(user_id);
+		ui_notifyStartListening(userId);
 	}
   
 	/**
@@ -379,7 +393,6 @@ class ListenerService {
 /** -------------------- streamer-service.js -------------------- */
 
 class StreamerService {
-
 	static startStreaming() {
 		ListenerService.stopListening()
 		console.log("startStreaming")
