@@ -11,10 +11,12 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/auth/")
+@Transactional
 public class RedirectController {
 
     @Autowired

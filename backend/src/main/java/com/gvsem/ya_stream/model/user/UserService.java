@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotAuthorizedException;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
+@Transactional
 public class UserService {
 
     @Autowired
