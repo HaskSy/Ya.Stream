@@ -5,13 +5,17 @@
     "manifest_version": 3,
     "icons": {},
     "action": {
-        "default_popup":"./popup.html"
+        "default_popup":"popup.html"
     },
     "permissions": [
         "storage"
     ],
     "background":{
-        "service_worker": "./service-worker.js",
+        "service_worker": "service-worker.js",
         "type": "module"
-    }
+    },
+    "web_accessible_resources": [{
+        "resources": ["popup.html"],
+        "matches": ["https://music.gvsem.com/*"]
+    }]
 }

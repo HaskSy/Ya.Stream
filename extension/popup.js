@@ -8,13 +8,10 @@
  */
 
 /** @type {ExtentionConfig} */
-let config;
-
-/** Async IIFE for fetching configuration file */
-(async () => {
-	config = await fetch(chrome.runtime.getURL('./config.json'))
-		.then(response => response.json())}
-)()
+let config = {
+	"baseApiUrl": "https://music.gvsem.com",
+	"authTokenStorageLocation": "authToken"
+}
 
 /** Initializing history of last subscribed on users if there is no such */
 chrome.storage.local.get(['history']).then((historyObj) => {
@@ -23,18 +20,25 @@ chrome.storage.local.get(['history']).then((historyObj) => {
     }
 })
 
-const urlParams = new URLSearchParams(window.location.search);
-const token = console.log(urlParams.get('token'));
-
-if (token != null) {
-    setAuthToken(token)
+window.onload = async () => {
+	const urlParams = new URLSearchParams(window.location.search);
+	const token = urlParams.get('token');
+	if (token != null) {
+		State.setAuthenticated(token)
+	}
+	document.getElementById("if_not_auth").style.display = "none"
+	refreshBtns();
+    if ((await State.getIsStreaming()) == true){
+		ui_notifyStartStreaming();
+	}
+	else if ((await State.getIsListening()) != null){
+		ui_notifyStartListening(await State.getIsListening());
+	}
 }
-
 /** // -------------------- initializing -------------------- */
 
 
 /** -------------------- functions.js -------------------- */
-const chromeLocalStorage = chrome.storage.local;
 const stream_switcher = document.getElementById("switcher");
 const status_description = document.getElementById("status");
 const text_form = document.getElementById("textForm");
@@ -44,9 +48,9 @@ const normal_display = document.getElementById("if_auth");
 const not_auth_display = document.getElementById("if_not_auth");
 const btnArr = ['l1', 'l2', 'l3', 'l4', 'l5']
 
-class State{
+class State {
 	static setIsStreaming(flag){
-		chromeLocalStorage.set({isStreaming: flag}).then(() => "Setting succesfully");
+		chrome.storage.local.set({isStreaming: flag}).then(() => "Setting succesfully");
 	}
 
 	static async getIsStreaming(){
@@ -54,7 +58,7 @@ class State{
 	}
 	
 	static setIsListening(flag){
-		chromeLocalStorage.set({isListening: flag}).then(() => "Setting succesfully");
+		chrome.storage.local.set({isListening: flag}).then(() => "Setting succesfully");
 	}
 
 	static async getIsListening(){
@@ -109,13 +113,13 @@ function startListening(user_id){
 	stopStreaming();
 	stopListening();
 	State.setIsListening(user_id);
-	//ListenerService.startListening(user_id);
+	ListenerService.startListening();
 	ui_notifyStartListening(user_id);
 }
 
 function stopListening(){
 	State.setIsListening(null);
-	//ListenerService.stopListening();
+	ListenerService.stopListening();
 	ui_notifyStopListening();
 }
 
@@ -133,25 +137,12 @@ function stopStreaming(){
 	ui_notifyStopStreaming();
 }
 
-
-window.onload = async () => {
-	document.getElementById("if_not_auth").style.display = "none"
-	refreshBtns();
-    if ((await State.getIsStreaming()) == true){
-		ui_notifyStartStreaming();
-	}
-	else if ((await State.getIsListening()) != null){
-		ui_notifyStartListening(await State.getIsListening());
-	}
-}
-
 listener();
 
 function listener(){
 	switcher = document.getElementById("switcher");
 	switcher.addEventListener('click', async function() {
 		if (this.checked) {
-			//State.setAuthenticated(null);
 			if (!await State.isAuthenticated()){
 				normal_display.style.display = "none"
 				not_auth_display.style.display = "block"
@@ -170,7 +161,6 @@ function listener(){
 			stopListening();
 		}
 		else{
-			//State.setAuthenticated("token")
 			if (!await State.isAuthenticated()){
 				normal_display.style.display = "none"
 				not_auth_display.style.display = "block"
@@ -191,8 +181,8 @@ function listener(){
         })
     });
 
-	auth_button.addEventListener("click",async ()=> {
-		//login();
+	auth_button.addEventListener("click", async () => {
+		login();
 		normal_display.style.display = "block"
 		not_auth_display.style.display = "none"
     })
@@ -209,12 +199,12 @@ async function rearrangeBtns(nextUser){
     }
     
     historyArr = [nextUser].concat(historyArr);
-    chromeLocalStorage.set({history: historyArr}).then(() => "Setting succesfully");  
+    chrome.storage.local.set({history: historyArr}).then(() => "Setting succesfully");  
     refreshBtns()
 }
 
 async function refreshBtns() {
-    historyArr = (await chromeLocalStorage.get(['history']))['history']
+    historyArr = (await chrome.storage.local.get(['history']))['history']
     for (let index = 0; index < btnArr.length; index++) {
         lastBtn = document.getElementById(btnArr[index]);
         lastBtn.textContent = historyArr[index];
@@ -248,7 +238,9 @@ const ActionTypes = {
 }
 
 async function login() {
-	chrome.tabs.create({'url': 'https://music.gvsem.com/login.html?redirect=' + chrome.runtime.getURL('popup.html')}, ()=>{})
+	chrome.tabs.create({
+        'url': `${config.baseApiUrl}/login.html?redirect=` + encodeURIComponent(chrome.runtime.getURL('popup.html'))
+    }, ()=>{})
 }
 
 /**
@@ -258,11 +250,7 @@ async function login() {
  */
 function createEventSourceListener(userId) {
 	const url = `${config.baseApiUrl}/listen/${userId}`;
-	const eventSource = new EventSource(url, {
-		headers: {
-	  		'Authorization': getAuthToken()
-		}
-	});
+	const eventSource = new EventSource(url);
 	return eventSource;
 }
 
@@ -270,7 +258,7 @@ function createEventSourceListener(userId) {
  * Sends event to backend for further broadcasting to subscribers
  * @param {ActionEvent} actionEvent 
  */
-async function sendStreamerEvent(actionEvent) {
+function sendStreamerEvent(actionEvent) {
 	const url = `${config.baseApiUrl}/stream`;
 	const params = new URLSearchParams({
 		event: actionEvent.action,
@@ -280,7 +268,7 @@ async function sendStreamerEvent(actionEvent) {
 
 	fetch(`${url}?${params}`, {
 		headers: {
-			Authorization: getAuthToken(),
+			Authorization: State.getAuthenticated(),
 			"Content-Type": "application/json",
 		},
 	})
@@ -295,25 +283,6 @@ async function sendStreamerEvent(actionEvent) {
 	});
 }
 
-/**
- * Tries to obtain Authorization token from chrome.storage,
- * if fails returns undefined
- * @returns {string | undefined}
- */
-async function getAuthToken() {
-	let result;
-	chrome.storage.local.get(authTokenStorage).then((res) => (result = res));
-	return result
-}
-
-/**
- * Stores Authorization token in chrome.storage
- * @param {string} token 
- */
-function setAuthToken(token) {
-	chrome.storage.local.set({ authTokenStorage: token });
-}
-
 /** // -------------------- api-service.js -------------------- */
 
 
@@ -324,11 +293,11 @@ function setAuthToken(token) {
  */
 class ListenerService {
 
-		/** @type {string} */
-		static currentUser = "";
-		/** @type {EventSource | undefined} */
-	  	static listenedSource = undefined;
-
+	/** @type {string} */
+	static currentUser = "";
+	/** @type {EventSource | undefined} */
+	static listenedSource = undefined;
+	
 	/**
 	 * Event handler for when the connection is open.
 	 * @param {Event} e - Generic open event.
@@ -365,13 +334,13 @@ class ListenerService {
 
 	/**
 	 * Starts listening to real-time events for the specified user.
-	 * @param {string} userId - Yandex ID of the user to listen to.
 	 * @returns {void}
 	 */
-	static async startListening(userId) {
+	static async startListening() {
 	  	this.stopListening();
+		const userId = await State.getIsListening()
+		this.currentUser = userId
 		this.listenedSource = createEventSourceListener(userId)
-		this.currentUser = userId;
 		this.#setListeners();
 	}
   
@@ -384,9 +353,23 @@ class ListenerService {
 			this.#unsetListeners();
 			this.listenedSource.close();
 			delete this.listenedSource;
-			this.currentUser = "";
 	  	}
 	}
-
 }
+
 /** //-------------------- listener-service.js -------------------- */
+
+/**
+ * @param {keyof ActionTypes} type 
+ */
+function submitMockEvent(type) {
+    /** @type {ActionEvent} */
+    let mockEvent = {
+        action: type,
+        position: 0,
+        trackId: 0,
+        timestamp: 0
+    };
+
+    sendStreamerEvent(mockEvent)
+}

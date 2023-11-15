@@ -1,4 +1,4 @@
 {
-	"baseApiUrl": "https://music.gvsem.com",
+	"baseApiUrl": "https://music.gvsem.com/",
 	"authTokenStorageLocation": "authToken"
 }

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ya.Stream</title>
+        <link rel="stylesheet" type="text/css" href="popup.css"/>
+    </head>
+    <body>
+    <div class="controls">
+        <button class="button button-ghost" id="prev">
+            <object type="image/svg+xml" data="icons/prev.svg"></object>
+        </button>
+        <button class="button button-ghost" id="play">
+            <object type="image/svg+xml" data="icons/play.svg" class="icon-play"></object>
+            <object type="image/svg+xml" data="icons/pause.svg" class="icon-pause"></object>
+        </button>
+        <button class="button button-ghost" id="next">
+            <object type="image/svg+xml" data="icons/next.svg" tabindex="-1"></object>
+        </button>
+        <button class="button button-ghost" id="goto">
+            <object type="image/svg+xml" data="icons/goto.svg" tabindex="-1"></object>
+        </button>
+        <input type="number" id="time">
+    </div>
+        <script src="controls-backend.js"></script>
+    </body>
+</html>
