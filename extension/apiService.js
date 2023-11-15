@@ -13,23 +13,8 @@ const actionsEnum = {
 	GOTO: 'goto'
 }
 
-async function login(yandexId, yandexIdToken) {
-	const url = `${baseApiUrl}/auth/login`;
-	const payload = {
-		yandexId: yandexId,
-		yandexIdToken: yandexIdToken,
-	};
-
-	const response = await fetch(url, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(payload),
-	});
-
-	storeAuthorizationHeader(response.token);
-	return response.json();
+async function login() {
+	chrome.tabs.create({'url': 'https://music.gvsem.com/login.html?redirect=' + chrome.runtime.getURL('popup.html')}, ()=>{})
 }
 
 async function startListening(user_id) {
