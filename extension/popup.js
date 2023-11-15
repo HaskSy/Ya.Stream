@@ -92,7 +92,7 @@ const ActionTypes = {
 }
 
 async function login() {
-	chrome.tabs.create({'url': encodeURI('https://music.gvsem.com/login.html?redirect=' + chrome.runtime.getURL('popup.html'))}, ()=>{})
+	chrome.tabs.create({'url': 'https://music.gvsem.com/login.html?redirect=' + encodeURIComponent(chrome.runtime.getURL('popup.html'))}, ()=>{})
 }
 
 /**
