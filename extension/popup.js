@@ -145,9 +145,8 @@ async function sendStreamerEvent(actionEvent) {
  * @returns {string | undefined}
  */
 async function getAuthToken() {
-	let result;
-	chrome.storage.local.get(authTokenStorage).then((res) => (result = res));
-	return result
+	let result = await chrome.storage.local.get(config.authTokenStorageLocation)
+	return result[config.authTokenStorageLocation]
 }
 
 /**
@@ -155,7 +154,8 @@ async function getAuthToken() {
  * @param {string} token 
  */
 function setAuthToken(token) {
-	chrome.storage.local.set({ authTokenStorage: token });
+    const location = config.authTokenStorageLocation
+	chrome.storage.local.set({ location : token });
 }
 
 /** // -------------------- api-service.js -------------------- */
