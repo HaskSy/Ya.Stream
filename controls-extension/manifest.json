@@ -1,0 +1,42 @@
+{
+    "name": "controls",
+    "description": "Listen music together",
+    "version": "1.0",
+    "manifest_version": 3,
+    "icons": {},
+    "action": {
+        "default_popup":"popup.html"
+    },
+    "permissions": [
+        "tabs",
+        "notifications",
+        "storage",
+        "system.display",
+        "sidePanel"
+    ],
+    "background":{
+        "service_worker": "background.js"
+    },
+
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.music.yandex.ru/*",
+                "*://*.music.yandex.com/*",
+                "*://*.music.yandex.ua/*",
+                "*://*.music.yandex.by/*"
+            ],
+            "js": [
+                "content_script.js"
+            ]
+        }
+    ],
+    "web_accessible_resources": [ {
+        "matches": [ "https://music.yandex.ru/*" ],
+        "resources": [ "background.js", "controls-backend.js", "content_script.js" , "injected.js"],
+        "use_dynamic_url": true
+    } ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    }
+}
