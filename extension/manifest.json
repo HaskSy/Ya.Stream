@@ -5,21 +5,18 @@
     "manifest_version": 3,
     "icons": {},
     "action": {
-        "default_popup":"./popup.html"
+        "default_popup":"popup.html"
     },
     "permissions": [
-        "storage",
-        "cookies"
+        "storage"
     ],
     "background":{
-        "service_worker": "./service-worker.js",
+        "service_worker": "service-worker.js",
         "type": "module"
     },
-    "host_permissions": [
-        "https://music.gvsem.com/"
-    ],
     "web_accessible_resources": [{
-          "resources": [ "finalredirect.html" ],
-          "matches": [ "https://music.gvsem.com/*" ]
+        "resources": ["popup.html"],
+        "matches": ["https://music.gvsem.com/*"],
+        "use_dynamic_url": true
     }]
 }

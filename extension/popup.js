@@ -8,13 +8,10 @@
  */
 
 /** @type {ExtentionConfig} */
-let config;
-
-/** Async IIFE for fetching configuration file */
-(async () => {
-	config = await fetch(chrome.runtime.getURL('./config.json'))
-		.then(response => response.json())}
-)()
+let config = {
+	"baseApiUrl": "https://music.gvsem.com",
+	"authTokenStorageLocation": "authToken"
+}
 
 /** Initializing history of last subscribed on users if there is no such */
 chrome.storage.local.get(['history']).then((historyObj) => {
@@ -23,11 +20,14 @@ chrome.storage.local.get(['history']).then((historyObj) => {
     }
 })
 
-const urlParams = new URLSearchParams(window.location.search);
-const token = console.log(urlParams.get('token'));
-
-if (token != null) {
-    setAuthToken(token)
+window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    console.log(token)
+    if (token != null) {
+        setAuthToken(token)
+    }
+    refreshBtns()
 }
 
 /** // -------------------- initializing -------------------- */
@@ -52,10 +52,6 @@ connectBtn.addEventListener("click",async ()=> {
         refreshBtns()
 }
 })
-
-window.onload = async () => {
-    refreshBtns()
-}
 
 async function refreshBtns() {
     const historyArr = (await chrome.storage.local.get(['history']))['history']
@@ -92,7 +88,9 @@ const ActionTypes = {
 }
 
 async function login() {
-	chrome.tabs.create({'url': 'https://music.gvsem.com/login.html?redirect=' + encodeURIComponent(chrome.runtime.getURL('popup.html'))}, ()=>{})
+	chrome.tabs.create({
+        'url': `${config.baseApiUrl}/login.html?redirect=` + encodeURIComponent(chrome.runtime.getURL('popup.html'))
+    }, ()=>{})
 }
 
 /**
@@ -114,7 +112,7 @@ function createEventSourceListener(userId) {
  * Sends event to backend for further broadcasting to subscribers
  * @param {ActionEvent} actionEvent 
  */
-async function sendStreamerEvent(actionEvent) {
+function sendStreamerEvent(actionEvent) {
 	const url = `${config.baseApiUrl}/stream`;
 	const params = new URLSearchParams({
 		event: actionEvent.action,
@@ -154,8 +152,9 @@ async function getAuthToken() {
  * @param {string} token 
  */
 function setAuthToken(token) {
-    const location = config.authTokenStorageLocation
-	chrome.storage.local.set({ location : token });
+    let obj = {}
+    obj[config.authTokenStorageLocation] = token;
+	chrome.storage.local.set(obj);
 }
 
 /** // -------------------- api-service.js -------------------- */
@@ -233,6 +232,21 @@ class ListenerService {
 			this.currentUser = "";
 	  	}
 	}
-
 }
+
 /** //-------------------- listener-service.js -------------------- */
+
+/**
+ * @param {keyof ActionTypes} type 
+ */
+function submitMockEvent(type) {
+    /** @type {ActionEvent} */
+    let mockEvent = {
+        action: type,
+        position: 0,
+        trackId: 0,
+        timestamp: 0
+    };
+
+    sendStreamerEvent(mockEvent)
+}
