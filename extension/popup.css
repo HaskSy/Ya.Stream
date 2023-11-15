@@ -3,7 +3,7 @@ body {
     width:200px;
 }
 
-.connectBtn {
+.connectBtns {
     width:100%;
     color:white;
     background:linear-gradient(#01a9e1, #5bc4bc);
@@ -13,6 +13,18 @@ body {
     font-weight: bold;
     cursor:pointer;
     margin-bottom:5px;
+}
+
+.authBtns {
+  width:100%;
+  color:white;
+  background:linear-gradient(#e10101, #e10101);
+  border-width:0px;
+  border-radius:20px;
+  padding:5px;
+  font-weight: bold;
+  cursor:pointer;
+  margin-bottom:5px;
 }
 
 .last-users {

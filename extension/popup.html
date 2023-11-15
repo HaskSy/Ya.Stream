@@ -6,21 +6,26 @@
     </head>
     <body>
         <h1>Ya.Stream</h1>
-        
-        <div class="switch">
-            <input type="checkbox">
+        <div id="if_auth">
+            <div id="switch">
+                <p><input type="checkbox" id="switcher" name="Streaming"></p>
+                <p><span id="status">Ready for work</span></label></p>
+            </div>
+            
+            <p><input id="textForm" type="text" name="Yandex ID" placeholder="Enter Yandex ID" size="18" /></p>
+            <button id="connectBtnId" class="connectBtns">Start listening</button>
+            
+            <div class="last-users">
+                <button class="last-users-btn" id="l1">1st user</button>
+                <button class="last-users-btn" id="l2">2nd user</button>
+                <button class="last-users-btn" id="l3">3rd user</button>
+                <button class="last-users-btn" id="l4">4th user</button>
+                <button class="last-users-btn" id="l5">5th user</button>
+            </div>
         </div>
 
-        
-        <p><input id="textForm" type="text" name="Yandex ID" placeholder="Enter Yandex ID" size="18" /></p>
-        <button id="connectBtnId" class="connectBtn">Connect</button>
-        
-        <div class="last-users">
-            <button class="last-users-btn" id="l1">1st user</button>
-            <button class="last-users-btn" id="l2">2nd user</button>
-            <button class="last-users-btn" id="l3">3rd user</button>
-            <button class="last-users-btn" id="l4">4th user</button>
-            <button class="last-users-btn" id="l5">5th user</button>
+        <div id="if_not_auth">
+            <button id="authBtn" class="authBtns">Log in with Ya.ID</button>
         </div>
         
         <script src="./popup.js"></script>
