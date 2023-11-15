@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 
 @RestController
@@ -18,9 +21,11 @@ public class RedirectController {
     UserService userService;
 
     @GetMapping("/redirect")
-    RedirectView redirect(@NotNull @RequestParam("access_token") String token) {
+    RedirectView redirect(HttpServletResponse response, @NotNull @RequestParam("access_token") String token) {
         User user = this.userService.authenticateByYandexToken(token);
-        return new RedirectView("/finalredirect.html?token=" + user.getToken());
+        Cookie cookie = new Cookie("redirect_token", user.getToken());
+        response.addCookie(cookie);
+        return new RedirectView("/finalredirect.html");
     }
 
 }

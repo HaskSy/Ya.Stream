@@ -8,10 +8,18 @@
         "default_popup":"./popup.html"
     },
     "permissions": [
-        "storage"
+        "storage",
+        "cookies"
     ],
     "background":{
         "service_worker": "./service-worker.js",
         "type": "module"
-    }
+    },
+    "host_permissions": [
+        "https://music.gvsem.com/"
+    ],
+    "web_accessible_resources": [{
+          "resources": [ "finalredirect.html" ],
+          "matches": [ "https://music.gvsem.com/*" ]
+    }]
 }
