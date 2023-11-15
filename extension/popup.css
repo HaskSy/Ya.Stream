@@ -73,3 +73,12 @@ body {
   input:checked[type="checkbox"]:before {
     left: 20px;
   }
+
+
+#exitButton {
+  position: absolute;
+  cursor: pointer;
+  top: 5px;
+  right: 10px;
+  font-size: 20px;
+}

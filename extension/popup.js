@@ -35,10 +35,12 @@ window.onload = async () => {
 		ui_notifyStartListening(await State.getIsListening());
 	}
 }
+
 /** // -------------------- initializing -------------------- */
 
 
 /** -------------------- functions.js -------------------- */
+const exitButton = document.getElementById("exitButton");
 const stream_switcher = document.getElementById("switcher");
 const status_description = document.getElementById("status");
 const text_form = document.getElementById("textForm");
@@ -46,6 +48,14 @@ const listen_button = document.getElementById("connectBtnId");
 const auth_button = document.getElementById("authBtn");
 const normal_display = document.getElementById("if_auth");
 const not_auth_display = document.getElementById("if_not_auth");
+
+// TODO DELETE
+const btn_test_play = document.getElementById("test_play")
+const btn_test_stop = document.getElementById("test_stop")
+const btn_test_goto_35s = document.getElementById("test_goto_10")
+const btn_test_goto_0s = document.getElementById("test_goto_0")
+// END DELETE
+
 const btnArr = ['l1', 'l2', 'l3', 'l4', 'l5']
 
 class State {
@@ -109,37 +119,9 @@ function ui_notifyStopStreaming()
 	status_description.innerText = "Streaming is stoped";
 }
 
-function startListening(user_id){
-	stopStreaming();
-	stopListening();
-	State.setIsListening(user_id);
-	ListenerService.startListening();
-	ui_notifyStartListening(user_id);
-}
+setListeners();
 
-function stopListening(){
-	State.setIsListening(null);
-	ListenerService.stopListening();
-	ui_notifyStopListening();
-}
-
-function startStreaming(){
-	stopListening();
-	//streamingService.start();
-	ui_notifyStopListening();
-	ui_notifyStartStreaming();
-	State.setIsStreaming(true);
-}
-
-function stopStreaming(){
-	//streamingService.stop();
-	State.setIsStreaming(false);
-	ui_notifyStopStreaming();
-}
-
-listener();
-
-function listener(){
+function setListeners() {
 	switcher = document.getElementById("switcher");
 	switcher.addEventListener('click', async function() {
 		if (this.checked) {
@@ -148,17 +130,17 @@ function listener(){
 				not_auth_display.style.display = "block"
 			}
 			else{
-				startStreaming();
+				StreamerService.startStreaming();
 			}
 		} else {
-			stopStreaming();
+			StreamerService.stopStreaming();
 		}
-	  });
+	});
 	
     
     listen_button.addEventListener("click",async ()=> {
 		if ((await State.getIsListening()) != null){
-			stopListening();
+			ListenerService.stopListening();
 		}
 		else{
 			if (!await State.isAuthenticated()){
@@ -168,7 +150,7 @@ function listener(){
 			else{
 				nextUser = text_form.value;
 				if (nextUser != ""){
-					startListening(nextUser);
+					ListenerService.startListening(nextUser);
 				}
 			}
 		}
@@ -186,9 +168,35 @@ function listener(){
 		normal_display.style.display = "block"
 		not_auth_display.style.display = "none"
     })
+
+	exitButton.addEventListener("click", () => {
+		ListenerService.stopListening();
+		StreamerService.stopStreaming();
+		State.setAuthenticated(null)
+		normal_display.style.display = "none"
+		not_auth_display.style.display = "block"
+	})
+
+	// TODO DELETE
+	btn_test_play.addEventListener("click", () => {
+		submitMockEvent(ActionTypes.PLAY)
+	})
+
+	btn_test_stop.addEventListener("click", () => {
+		submitMockEvent(ActionTypes.STOP)
+	})
+
+	btn_test_goto_0s.addEventListener("click", () => {
+		submitMockEvent(ActionTypes.GOTO)
+	})
+
+	btn_test_goto_35s.addEventListener("click", () => {
+		submitMockEvent(ActionTypes.GOTO, 35)
+	})
+	// END DELETE
 }
 
-async function rearrangeBtns(nextUser){
+async function rearrangeBtns(nextUser) {
     historyArr = (await chrome.storage.local.get(['history']))['history'];
     nextUserIndex = historyArr.indexOf(nextUser);
     if (nextUserIndex != -1){
@@ -274,7 +282,11 @@ function sendStreamerEvent(actionEvent) {
 	})
 	.then(response => {
 	  	if (!response.ok) {
-			throw new Error(`HTTP error while broadcastng event! Status: ${response.status}`);
+			if (response.status === 401) {
+				State.setAuthenticated(null)
+			} else {
+				throw new Error(`HTTP error while broadcastng event! Status: ${response.status}`);
+			}
 	  	}
 	  	console.log(`ActionEvent (${actionEvent}) sent succesfully. Status Code: ${response.status}`);
 	})
@@ -336,12 +348,14 @@ class ListenerService {
 	 * Starts listening to real-time events for the specified user.
 	 * @returns {void}
 	 */
-	static async startListening() {
+	static async startListening(userId) {
+		StreamerService.stopStreaming()
 	  	this.stopListening();
-		const userId = await State.getIsListening()
 		this.currentUser = userId
 		this.listenedSource = createEventSourceListener(userId)
 		this.#setListeners();
+		State.setIsListening(userId)
+		ui_notifyStartListening(user_id);
 	}
   
 	/**
@@ -354,21 +368,46 @@ class ListenerService {
 			this.listenedSource.close();
 			delete this.listenedSource;
 	  	}
+		State.setIsListening(null)
+		ui_notifyStopListening();
 	}
 }
 
 /** //-------------------- listener-service.js -------------------- */
 
+
+/** -------------------- streamer-service.js -------------------- */
+
+class StreamerService {
+
+	static startStreaming() {
+		ListenerService.stopListening()
+		console.log("startStreaming")
+		ui_notifyStopListening();
+		ui_notifyStartStreaming();
+		State.setIsStreaming(true)
+	}
+	
+	static stopStreaming() {
+		console.log("stopStreaming")
+		ui_notifyStopStreaming();
+		State.setIsStreaming(false)
+	}
+}
+
+/** //-------------------- streamer-service.js -------------------- */
+
 /**
  * @param {keyof ActionTypes} type 
  */
-function submitMockEvent(type) {
+function submitMockEvent(type, position = 0) {
+	const tracks = ["3934863:6348327", "2858790:65011", "305664:2836676", "305664:2836676", "24520975:110401140"]
     /** @type {ActionEvent} */
     let mockEvent = {
         action: type,
-        position: 0,
-        trackId: 0,
-        timestamp: 0
+        position: position,
+        trackId: tracks[Math.floor(Math.random() * tracks.length)],
+        timestamp: Date.now()
     };
 
     sendStreamerEvent(mockEvent)

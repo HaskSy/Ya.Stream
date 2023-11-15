@@ -11,7 +11,7 @@
                 <p><input type="checkbox" id="switcher" name="Streaming"></p>
                 <p><span id="status">Ready for work</span></label></p>
             </div>
-            
+            <span id="exitButton">&larr;</span>
             <p><input id="textForm" type="text" name="Yandex ID" placeholder="Enter Yandex ID" size="18" /></p>
             <button id="connectBtnId" class="connectBtns">Start listening</button>
             
@@ -22,6 +22,13 @@
                 <button class="last-users-btn" id="l4">4th user</button>
                 <button class="last-users-btn" id="l5">5th user</button>
             </div>
+
+            <ul style="all: unset; display: flex; flex-direction: row; gap: 10px;">
+                <li style="all:unset"><button id="test_start">Start</button></li>
+                <li style="all:unset"><button id="test_stop">Stop</button></li>
+                <li style="all:unset"><button id="test_goto_35">Goto 35s</button></li>
+                <li style="all:unset"><button id="test_goto_0">Goto 0s</button></li>
+            </ul>
         </div>
 
         <div id="if_not_auth">
