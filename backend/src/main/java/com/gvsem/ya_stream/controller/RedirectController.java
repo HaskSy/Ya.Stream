@@ -3,6 +3,7 @@ package com.gvsem.ya_stream.controller;
 import com.gvsem.ya_stream.model.user.User;
 import com.gvsem.ya_stream.model.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,9 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 
-@RestController
+@Controller
 @RequestMapping("/auth/")
-@Transactional
 public class RedirectController {
 
     @Autowired

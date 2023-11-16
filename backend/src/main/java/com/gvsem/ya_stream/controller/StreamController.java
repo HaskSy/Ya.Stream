@@ -4,12 +4,14 @@ import com.gvsem.ya_stream.api.StreamApiDelegate;
 import com.gvsem.ya_stream.model.event.Event;
 import com.gvsem.ya_stream.model.event.EventService;
 import com.gvsem.ya_stream.model.user.User;
+import com.gvsem.ya_stream.model.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,12 +21,14 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.QueryParam;
 
 
-@RestController
-@Transactional
+@Controller
 public class StreamController {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     private SseBus sseBus;
@@ -33,11 +37,11 @@ public class StreamController {
     @GetMapping("/stream")
     public ResponseEntity<Void> streamGet(@NotNull @QueryParam("event") String event, @NotNull @QueryParam("track_id") String track_id, @QueryParam("position") String position) throws Exception {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken) || !(authentication.getPrincipal() instanceof User)) {
+        if (!(authentication instanceof AnonymousAuthenticationToken) || !(authentication.getPrincipal() instanceof String)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Your token is not provided or expired");
         }
 
-        User user = (User) authentication.getPrincipal();
+        User user = userService.authenticateByToken(String.valueOf(authentication.getPrincipal())).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "2 Your token is not provided or expired"));
         Event e = eventService.submitEvent(user, event, track_id, position);
         sseBus.send(e, user);
         return ResponseEntity.status(201).body(null);
