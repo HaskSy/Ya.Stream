@@ -145,10 +145,12 @@ const btnArr = ['l1', 'l2', 'l3', 'l4', 'l5']
 
 async function ui_notifyStartListening() {
 	const userId = await State.getIsListening()
-	stream_switcher.checked = false;
-	status_description.innerText = "Now listening " + userId;
-	rearrangeBtns(userId);
-	listen_button.textContent = "Stop listening";
+	if (userId !== null) {
+		stream_switcher.checked = false;
+		status_description.innerText = "Now listening " + userId;
+		rearrangeBtns(userId);
+		listen_button.textContent = "Stop listening";
+	}
 }
 
 function ui_notifyStopListening() {
@@ -195,7 +197,7 @@ function setListeners() {
 			}
 			else{
 				let nextUser = text_form.value;
-				if (nextUser !== ""){
+				if (nextUser !== "") {
 					sendListenEvent(ListenEvents.START, nextUser)
 				}
 			}
