@@ -23,9 +23,6 @@ import java.util.List;
 @Slf4j
 public class XHeaderAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    UserService userService;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response, FilterChain filterChain)
@@ -34,10 +31,7 @@ public class XHeaderAuthenticationFilter extends OncePerRequestFilter {
         String xAuth = request.getHeader("Authorization");
         logger.info("login with header = " + xAuth);
         if (xAuth != null) {
-            var user = userService.authenticateByToken(xAuth);
-            if (user.isPresent()) {
-                SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken(xAuth, user.get(), List.of(new SimpleGrantedAuthority("basic"))));
-            }
+            SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken(xAuth, xAuth, List.of(new SimpleGrantedAuthority("basic"))));
         }
 
         filterChain.doFilter(request, response);
