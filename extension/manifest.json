@@ -3,12 +3,14 @@
     "description": "Listen music together",
     "version": "1.0",
     "manifest_version": 3,
+    "minimum_chrome_version": "100",
     "icons": {},
     "action": {
-        "default_popup":"popup.html"
+        "default_popup":"index.html"
     },
     "permissions": [
-        "storage"
+        "storage",
+        "scripting"
     ],
     "background":{
         "service_worker": "service-worker.js",
@@ -16,6 +18,39 @@
     },
     "web_accessible_resources": [{
         "resources": ["popup.html"],
-        "matches": ["https://music.gvsem.com/*"]
-    }]
+        "matches": ["https://music.gvsem.com/*"],
+        "use_dynamic_url": true
+    }, {
+        "resources": [ "injected.js"],
+        "matches": [ "https://music.yandex.ru/*" ],
+        "use_dynamic_url": true
+    }],
+    "content_scripts": [{
+            "matches": [
+              "*://*.music.yandex.ru/*",
+              "*://*.music.yandex.com/*",
+              "*://*.music.yandex.ua/*",
+              "*://*.music.yandex.by/*"
+            ],
+            "js": [
+              "content-script.js"
+            ]
+        }
+    ],
+    "content_security_policy": {
+      "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+    "externally_connectable": {
+      "matches": [
+        "https://music.yandex.ua/*",
+        "https://music.yandex.ru/*",
+        "https://music.yandex.by/*"
+      ]
+    },
+    "host_permissions": [
+      "https://music.yandex.ua/*",
+      "https://music.yandex.ru/*",
+      "https://music.yandex.by/*",
+      "https://avatars.yandex.net/*"
+    ]
 }

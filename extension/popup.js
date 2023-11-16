@@ -1,3 +1,4 @@
+export {State}
 /** -------------------- initializing -------------------- */
 
 /**
@@ -20,14 +21,7 @@ chrome.storage.local.get(['history']).then((historyObj) => {
     }
 })
 
-window.onload = async () => {
-	text_form.value = await State.getTextFormContent();
-	const urlParams = new URLSearchParams(window.location.search);
-	const token = urlParams.get('token');
-	if (token != null) {
-		State.setAuthenticated(token)
-	}
-
+document.addEventListener('DOMContentLoaded', async () => {
 	if(!(await State.isAuthenticated())) {
 		document.getElementById("if_auth").style.display = "none"
 	}
@@ -36,13 +30,15 @@ window.onload = async () => {
 	}
 	
 	refreshBtns();
-    if ((await State.getIsStreaming()) == true){
+	if ((await State.getIsStreaming()) == true){
 		ui_notifyStartStreaming();
 	}
 	else if ((await State.getIsListening()) != null){
 		ui_notifyStartListening(await State.getIsListening());
 	}
-}
+	setListeners();
+})
+
 
 
 
@@ -136,10 +132,9 @@ function ui_notifyStopStreaming()
 	status_description.innerText = "Streaming is stoped";
 }
 
-setListeners();
 
 function setListeners() {
-	switcher = document.getElementById("switcher");
+	let switcher = document.getElementById("switcher");
 	switcher.addEventListener('click', async function() {
 		if (this.checked) {
 			if (!await State.isAuthenticated()){
@@ -165,7 +160,7 @@ function setListeners() {
 				not_auth_display.style.display = "block"
 			}
 			else{
-				nextUser = text_form.value;
+				let  nextUser = text_form.value;
 				if (nextUser != ""){
 					ListenerService.startListening(nextUser);
 				}
@@ -174,7 +169,7 @@ function setListeners() {
     })
 
     btnArr.forEach(element => {
-        last5btn = document.getElementById(element);
+        let last5btn = document.getElementById(element);
         last5btn.addEventListener("click",async ()=> {
             text_form.value = document.getElementById(element).textContent;
 			State.setTextFormContent(text_form.value);
@@ -219,8 +214,8 @@ function setListeners() {
 }
 
 async function rearrangeBtns(nextUser) {
-    historyArr = (await chrome.storage.local.get(['history']))['history'];
-    nextUserIndex = historyArr.indexOf(nextUser);
+    let historyArr = (await chrome.storage.local.get(['history']))['history'];
+    let nextUserIndex = historyArr.indexOf(nextUser);
     if (nextUserIndex != -1){
         historyArr.splice(nextUserIndex, 1);
     }
@@ -234,9 +229,9 @@ async function rearrangeBtns(nextUser) {
 }
 
 async function refreshBtns() {
-    historyArr = (await chrome.storage.local.get(['history']))['history']
+    let historyArr = (await chrome.storage.local.get(['history']))['history']
     for (let index = 0; index < btnArr.length; index++) {
-        lastBtn = document.getElementById(btnArr[index]);
+        let lastBtn = document.getElementById(btnArr[index]);
         lastBtn.textContent = historyArr[index];
     }
 }
@@ -250,7 +245,7 @@ async function refreshBtns() {
  * Uniform object which is getting send to be broadcasted
  * @typedef {Object} ActionEvent
  * @property {keyof ActionTypes} action
- * @property {number} trackId
+ * @property {String} trackId albumID:trackID
  * @property {number} position
  * @property {number} timestamp
  */
@@ -319,8 +314,9 @@ async function sendStreamerEvent(actionEvent) {
 			} else {
 				throw new Error(`HTTP error while broadcastng event! Status: ${response.status}`);
 			}
-	  	}
-	  	console.log(`ActionEvent (${actionEvent}) sent succesfully. Status Code: ${response.status}`);
+	  	} else {
+			console.log(`ActionEvent (${actionEvent}) sent succesfully. Status Code: ${response.status}`);
+		}
 	})
 	.catch(error => {
 	  	console.error('ActionEvent fetching error:', error);
@@ -361,7 +357,14 @@ class ListenerService {
      * @param {MessageEvent<ActionEvent>} event - Message event.
      * @returns {void}
      */
-  	static #onMessageHandler = (event) => console.log(event.data);
+  	static #onMessageHandler = (event) => {
+	  const data = JSON.parse(event.data)
+	  console.log('event')
+	  console.log(event)
+		console.log('data is')
+		console.log(data)
+		chrome.runtime.sendMessage({'action': data.event, 'trackID': data.track_id, 'progress': data.position})
+	}
 
 	/**
      * Event handler for errors.
@@ -431,6 +434,40 @@ class StreamerService {
 		ui_notifyStopStreaming();
 		State.setIsStreaming(false)
 	}
+}
+
+chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
+	State.getIsStreaming().then((v) => { //aaa
+		if (v) {
+			// What is inside request.dataType?
+			// Hope I know. See injected.js:sendToServiceWorker
+			switch (request.dataType) {
+				case 'pause':
+				case 'play':
+				case 'goto':
+					console.log('we are in popup listener, trying to sendStreamerEvent. request is')
+					console.log(request)
+					const regex = new RegExp('[0-9]+','g')
+					let p = request.currentTrack.link
+					let iterator = p.matchAll(regex)
+					let currentAlbumID = iterator.next().value[0]
+					let currentTrackID = iterator.next().value[0]
+					let progress = Math.floor(request.progress.position)
+					sendStreamerEvent({
+						action: request.dataType,
+						position: progress,
+						trackId: `${currentAlbumID}:${currentTrackID}`,
+						timestamp: Date.now()
+					})
+					break;
+			}
+		}
+	})
+
+})
+
+function sendTestData(str) {
+	chrome.runtime.sendMessage({'action': 'play', 'trackID': str, 'progress': 0})
 }
 
 /** //-------------------- streamer-service.js -------------------- */
