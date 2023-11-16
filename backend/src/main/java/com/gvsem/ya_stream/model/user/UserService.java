@@ -69,8 +69,10 @@ public class UserService {
             JSONObject json = new JSONObject(result.getBody());
             return Optional.of(new YandexUserDto(json.getLong("id"), json.getString("login")));
         } catch (JSONException e) {
+            e.printStackTrace();
             return Optional.empty();
         } catch (RestClientException e) {
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatusCode.valueOf(503), "Yandex identity failed to verify");
         }
     }
