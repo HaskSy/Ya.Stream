@@ -395,8 +395,11 @@ class ListenerService {
 	static async startListening(userId) {
 		StreamerService.stopStreaming()
 	  	this.stopListening();
-		this.currentUser = userId
-		this.listenedSource = await createEventSourceListener(userId)
+		if (this.currentUser != userId) {
+			this.currentUser = userId
+			this.listenedSource = await createEventSourceListener(userId)
+			State.setIsListening(userId)
+		}
 		this.#setListeners();
 	}
   
