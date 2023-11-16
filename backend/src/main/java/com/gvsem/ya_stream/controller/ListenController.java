@@ -1,5 +1,6 @@
 package com.gvsem.ya_stream.controller;
 
+import com.gvsem.ya_stream.model.event.Event;
 import com.gvsem.ya_stream.model.user.User;
 import com.gvsem.ya_stream.model.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,14 @@ public class ListenController {
 
     @GetMapping(path = "/listen/{yandexLogin}", produces= MediaType.TEXT_EVENT_STREAM_VALUE)
     ResponseEntity<SseEmitter> listen(@PathVariable("yandexLogin") String yandexLogin) {
-        User user = userService.getUserByYandexLogin(yandexLogin).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+        if (yandexLogin.equals("demo")) {
+            var emitter = new SseEmitter(-1L);
+            sseBus.demo(emitter);
+            return ResponseEntity.status(HttpStatus.OK).body(emitter);
+        } else {
+            userService.getUserByYandexLogin(yandexLogin).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+        }
+
         var emitter = new SseEmitter(-1L);
         sseBus.subscribe(emitter, yandexLogin);
         return ResponseEntity.status(HttpStatus.OK).body(emitter);

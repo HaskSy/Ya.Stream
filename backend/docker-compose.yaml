@@ -6,7 +6,9 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:h2:file:./data/db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/musicdb
+      - SPRING_DATASOURCE_USERNAME=musicdb
+      - SPRING_DATASOURCE_PASSWORD=musicdb
     user: root
     restart:
       unless-stopped
@@ -14,3 +16,31 @@ services:
       - ./data:/home/app/data
     ports:
       - "7001:7001"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13.3-alpine
+    environment:
+      POSTGRES_DB: musicdb
+      POSTGRES_USER: musicdb
+      POSTGRES_PASSWORD: musicdb
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U musicdb -d musicdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"

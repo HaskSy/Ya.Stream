@@ -17,12 +17,18 @@ let config = {
 /** Initializing history of last subscribed on users if there is no such */
 chrome.storage.local.get(['history']).then((historyObj) => {
     if (historyObj['history'] === undefined) {
-        chrome.storage.local.set({history: ["empty", "empty", "empty", "empty", "empty"]}).then(() => console.log("Setting succesfully"));
+        chrome.storage.local.set({history: ["", "", "", "", ""]}).then(() => console.log("Setting succesfully"));
     }
 })
 
 document.addEventListener('DOMContentLoaded', async () => {
-	document.getElementById("if_not_auth").style.display = "none"
+	if(!(await State.isAuthenticated())) {
+		document.getElementById("if_auth").style.display = "none"
+	}
+	else{
+		document.getElementById("if_not_auth").style.display = "none"
+	}
+	
 	refreshBtns();
 	if ((await State.getIsStreaming()) == true){
 		ui_notifyStartStreaming();
@@ -32,6 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 	setListeners();
 })
+
+
 
 
 /** // -------------------- initializing -------------------- */
@@ -86,6 +94,15 @@ class State {
 
 	static async isAuthenticated() {
 		return (null !== await this.getAuthenticated())
+		
+	}
+
+	static setTextFormContent(text_content) {
+		chrome.storage.local.set({textContent: text_content}).then(() => "Setting succesfully");
+	}
+
+	static async getTextFormContent() {
+		return (await chrome.storage.local.get(['textContent']))['textContent'];
 	}
 }
 
@@ -95,14 +112,12 @@ function ui_notifyStartListening(userId)
 	status_description.innerText = "Now listening " + userId;
 	rearrangeBtns(userId);
 	listen_button.textContent = "Stop listening";
-	listen_button.style.background = "linear-gradient(#e10101, #e10101)";
 }
 
 function ui_notifyStopListening()
 {
 	status_description.innerHTML = "Listening is stoped";
 	listen_button.textContent = "Start listening";
-	listen_button.style.background = "linear-gradient(#01a9e1, #5bc4bc)";
 }
 
 function ui_notifyStartStreaming()
@@ -157,6 +172,7 @@ function setListeners() {
         let last5btn = document.getElementById(element);
         last5btn.addEventListener("click",async ()=> {
             text_form.value = document.getElementById(element).textContent;
+			State.setTextFormContent(text_form.value);
         })
     });
 
@@ -164,6 +180,10 @@ function setListeners() {
 		login();
 		normal_display.style.display = "block"
 		not_auth_display.style.display = "none"
+    })
+
+	text_form.addEventListener('change', async () => {
+		State.setTextFormContent(text_form.value);
     })
 
 	exitButton.addEventListener("click", () => {
@@ -329,6 +349,8 @@ class ListenerService {
 	 */
   	static #onOpenHandler = (e) => {
 		console.log(`The connection with user "${this.currentUser}" has been (re)establised`);
+		State.setIsListening(userId);
+		ui_notifyStartListening(this.currentUser);
   	}
 	/**
      * Event handler for incoming messages.
@@ -349,7 +371,10 @@ class ListenerService {
      * @param {Event} error - Generic error event.
      * @returns {void}
      */
-	static #onErrorHandler = (error) => console.error(error);
+	static #onErrorHandler = (error) => {
+		alert("User not found");
+		ListenerService.stopListening();
+	};
 
 	static #setListeners() {
 		this.listenedSource.addEventListener("open", this.#onOpenHandler)
@@ -373,8 +398,6 @@ class ListenerService {
 		this.currentUser = userId
 		this.listenedSource = await createEventSourceListener(userId)
 		this.#setListeners();
-		State.setIsListening(userId)
-		ui_notifyStartListening(userId);
 	}
   
 	/**
