@@ -5,19 +5,26 @@ window.addEventListener("message", function(event) {
     if (event.source !== window) { return; }
     switch (event.data.action) {
         case 'next':
+            console.log('going to next track')
             playNext()
             break;
         case 'prev':
+            console.log('going to previous track')
             playPrevious()
             break;
         case 'play':
+            console.log('playing track:')
+            console.log(event.data.trackID)
+            playTrack(event.data.trackID);
+            break;
         case 'stop':
-            playCurrent(event.data.action === 'stop');
+            console.log('track stopped')
+            stopCurrent();
             break;
         case 'goto':
-            console.log('payload on the page is')
-            console.log(event.data.payload)
-            gotoTime(event.data.payload);
+            console.log('going to the time')
+            console.log(event.data.progress)
+            gotoTime(event.data.progress);
             break;
     }
     // dirty-dirty hack. See content-script.js:injectJS
@@ -60,8 +67,29 @@ function playPrevious() {
     // Do not send event from here about changed track
     let p = externalAPI.prev();
 }
-function playCurrent(state) {
-    let p = externalAPI.togglePause(state);
+function playTrack(trackID) {
+    // link looks like '/album/12345/track/54321'
+    const regex = new RegExp('[0-9]+','g')
+    let p = externalAPI.getCurrentTrack().link
+    let iterator = p.matchAll(regex)
+    let currentAlbumID = iterator.next().value[0]
+    let currentTrackID = iterator.next().value[0]
+
+    let playlistAndTrackID = trackID.split(':')
+    if (currentAlbumID === playlistAndTrackID[0] && currentTrackID === playlistAndTrackID[1]){
+        let p = externalAPI.togglePause(false);
+    } else {
+        externalAPI.navigate(`/album/${playlistAndTrackID[0]}/track/${playlistAndTrackID[1]}`)
+        setTimeout(() => {
+            document.getElementsByClassName('d-track_selected')[0].getElementsByClassName('button-play')[0].click()
+        }, 1000)
+    }
+
+    sendToServiceWorker('togglePause')
+}
+
+function stopCurrent() {
+    let p = externalAPI.togglePause(true);
     sendToServiceWorker('togglePause')
 }
 

@@ -1,4 +1,3 @@
-export {State}
 /** -------------------- initializing -------------------- */
 
 /**
@@ -409,6 +408,30 @@ class StreamerService {
 		ui_notifyStopStreaming();
 		State.setIsStreaming(false)
 	}
+}
+
+chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
+	if (isStreaming) {
+		// What is inside request.dataType?
+		// Hope I know. See injected.js:sendToServiceWorker
+		switch (request.dataType) {
+			case 'setCurrentTrack':
+				let songName = request.currentTrack.title
+				console.log('song name is')
+				console.log(songName)
+				console.log('song position')
+				console.log(request.progress.position)
+				// TODO: your code here
+				break;
+			case 'togglePause':
+				// TODO: your code here
+				break;
+		}
+	}
+})
+
+function sendTestData(str) {
+	chrome.runtime.sendMessage({'action': 'play', 'trackID': str, 'progress': 0})
 }
 
 /** //-------------------- streamer-service.js -------------------- */

@@ -17,7 +17,7 @@ chrome.runtime.onMessage.addListener(request => {
             case 'play':
             case 'pause':
             case 'goto':
-                window.postMessage({'action': request.action, 'payload': payload}, '*');
+                window.postMessage(request, '*');
                 break;
             default:
                 console.log('something strange in content-script in chrome.runtime.onMessage')

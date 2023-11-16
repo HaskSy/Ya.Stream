@@ -24,32 +24,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         let extensionID = chrome.runtime.id
         sendResponse({id: extensionID})
         return;
-    } else if (request.greeting === 'turnOnStreaming') {
-        isStreaming = true
-        return;
-    } else if (request.greeting === 'turnOffStreaming') {
-        isStreaming = false
-        return;
     }
     handlePlayerEvents(request)
-})
-
-chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-    // What is inside request.dataType?
-    // Hope I know. See injected.js:sendToServiceWorker
-    switch (request.dataType) {
-        case 'setCurrentTrack':
-            let songName = request.currentTrack.title
-            console.log('song name is')
-            console.log(songName)
-            console.log('song position')
-            console.log(request.progress.position)
-            // TODO: your code here
-            break;
-        case 'togglePause':
-
-            break;
-    }
 })
 
 
@@ -60,6 +36,6 @@ chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => 
 function handlePlayerEvents(event) {
     // play, next, prev, goto
     console.log('payload is')
-    console.log(event.payload)
-    chrome.tabs.sendMessage(yandexTabID[0], {'action': event.action, 'payload': event.payload})
+    console.log(event)
+    chrome.tabs.sendMessage(yandexTabID[0], event)
 }
