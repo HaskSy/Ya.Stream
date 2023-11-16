@@ -105,7 +105,7 @@ function navigateTo(trackID, progress){
                     [0].getElementsByClassName('button-play')
                     [0].click()
                 setTimeout(() => {
-                    gotoTime(progress)
+                    gotoTime(progress, true)
                 },200)
             }, 1000)
             resolve()
@@ -125,17 +125,21 @@ function stopCurrent(trackID, progress) {
     })
 }
 
-function gotoTime(time) {
+function gotoTime(time, targetState = undefined) {
+    if (targetState === undefined){
+        targetState = externalAPI.isPlaying()
+    }
     let res = externalAPI.setPosition(time)
     //TODO: website won't work normally if you did not clicked at something on the page
     // How we can bypass it?
     if (time !== res) {
         console.log('somebody must start the track first')
         // document.getElementsByClassName('player-controls__btn_play')[0].click()
-        let previousValue = externalAPI.isPlaying()
         externalAPI.play().then(()=> {
             externalAPI.setPosition(time)
+            setTimeout(() => {
+                externalAPI.togglePause(!targetState)
+            }, 100)
         })
-        externalAPI.togglePause(!previousValue)
     }
 }

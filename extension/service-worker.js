@@ -269,7 +269,7 @@ class ListenerService {
      * @returns {void}
      */
     static #onErrorHandler = (error) => {
-        alert("User not found");
+        console.log("User not found");
         ListenerService.stopListening();
     };
 
