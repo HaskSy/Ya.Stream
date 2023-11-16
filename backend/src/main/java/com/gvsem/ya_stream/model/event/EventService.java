@@ -20,7 +20,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
-@Transactional
+//@Transactional
 public class EventService {
 
     @Autowired

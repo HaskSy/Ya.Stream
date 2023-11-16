@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.time.Duration;
 
 @Service
-@Transactional
+//@Transactional
 @Slf4j
 public class UserService {
 

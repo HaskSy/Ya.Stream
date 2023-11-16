@@ -77,7 +77,7 @@ public class SseBus {
                 Thread.sleep(11000);
                 emitter.send(eventAsString(Event.play(demoUser, "3369429:28192686", "160")));
                 Thread.sleep(16000);
-                emitter.send(eventAsString(Event.stop(demoUser, "3369429:28192686", "0")));
+                emitter.send(eventAsString(Event.stop(demoUser, "3369429:28192686", "160")));
             } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
             }

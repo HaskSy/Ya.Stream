@@ -33,26 +33,25 @@ public class ListenController {
     SseBus sseBus;
 
     @GetMapping(path = "/listen/{yandexLogin}", produces= MediaType.TEXT_EVENT_STREAM_VALUE)
-    ResponseEntity<SseEmitter> listen(@PathVariable("yandexLogin") String yandexLogin) {
+    ResponseEntity<SseEmitter> listen(@PathVariable("yandexLogin") String yandexLogin) throws IOException {
+
+        Event lastEvent = null;
+        User user = null;
         if (yandexLogin.equals("demo")) {
             var emitter = new SseEmitter(-1L);
             sseBus.demo(emitter);
             return ResponseEntity.status(HttpStatus.OK).body(emitter);
         } else {
-            userService.getUserByYandexLogin(yandexLogin).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+            user = userService.getUserByYandexLogin(yandexLogin).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+            lastEvent = eventService.lastEventOf(user).orElse(null);
         }
 
-        var emitter = new SseEmitter(-1L);
+        var emitter = new SseEmitter(60000L);
         sseBus.subscribe(emitter, yandexLogin);
 
-        userService.getUserByYandexLogin(yandexLogin).ifPresent((user) -> {
-            eventService.lastEventOf(user).ifPresent((event) -> {
-                try {
-                    emitter.send(SseBus.eventAsString(event));
-                } catch (IOException ignored) {
-                }
-            });
-        });
+        if (lastEvent != null) {
+            emitter.send(SseBus.eventAsString(lastEvent));
+        }
 
         return ResponseEntity.status(HttpStatus.OK).body(emitter);
     }
