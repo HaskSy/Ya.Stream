@@ -368,19 +368,3 @@ function sendTestData(str) {
 }
 
 /** //-------------------- streamer-service.js -------------------- */
-
-/**
- * @param {keyof ActionTypes} type
- */
-function submitMockEvent(type, position = 0) {
-    const tracks = ["3934863:6348327", "2858790:65011", "305664:2836676", "305664:2836676", "24520975:110401140"]
-    /** @type {ActionEvent} */
-    let mockEvent = {
-        action: type,
-        position: position,
-        trackId: tracks[Math.floor(Math.random() * tracks.length)],
-        timestamp: Date.now()
-    };
-
-    sendStreamerEvent(mockEvent)
-}

@@ -166,10 +166,12 @@ function setListeners() {
 			}
 			else{
 				sendStreamerEvent(StreamEvents.START)
+				ui_notifyStartStreaming()
 				// StreamerService.startStreaming();
 			}
 		} else {
 			sendStreamerEvent(StreamEvents.STOP)
+			ui_notifyStopStreaming()
 			// StreamerService.stopStreaming();
 		}
 	});
@@ -178,6 +180,7 @@ function setListeners() {
     listen_button.addEventListener("click",async ()=> {
 		if ((await State.getIsListening()) != null){
 			sendListenEvent(ListenEvents.STOP)
+			ui_notifyStopListening()
 		}
 		else{
 			if (!await State.isAuthenticated()){
@@ -188,6 +191,7 @@ function setListeners() {
 				let  nextUser = text_form.value;
 				if (nextUser !== ""){
 					sendListenEvent(ListenEvents.START, nextUser)
+					ui_notifyStartListening()
 				}
 			}
 		}
@@ -214,6 +218,8 @@ function setListeners() {
 	exitButton.addEventListener("click", () => {
 		sendListenEvent(ListenEvents.STOP)
 		sendStreamerEvent(StreamEvents.STOP)
+		ui_notifyStopListening()
+		ui_notifyStopStreaming()
 		// ListenerService.stopListening();
 		// StreamerService.stopStreaming();
 		State.setAuthenticated(null)
