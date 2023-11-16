@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,8 +20,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.QueryParam;
 
 
-@RestController
-@Transactional
+@Controller
 public class StreamController {
 
     @Autowired
