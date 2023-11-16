@@ -338,7 +338,12 @@ class ListenerService {
      * @returns {void}
      */
   	static #onMessageHandler = (event) => {
-		chrome.runtime.sendMessage({'action': event.data.action, 'trackID': event.data.trackId, 'progress': event.data.position})
+	  const data = JSON.parse(event.data)
+	  console.log('event')
+	  console.log(event)
+		console.log('data is')
+		console.log(data)
+		chrome.runtime.sendMessage({'action': data.event, 'trackID': data.track_id, 'progress': data.position})
 	}
 
 	/**
@@ -411,22 +416,20 @@ class StreamerService {
 }
 
 chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-	if (isStreaming) {
-		// What is inside request.dataType?
-		// Hope I know. See injected.js:sendToServiceWorker
-		switch (request.dataType) {
-			case 'setCurrentTrack':
-				let songName = request.currentTrack.title
-				console.log('song name is')
-				console.log(songName)
-				console.log('song position')
-				console.log(request.progress.position)
-				// TODO: your code here
-				break;
-			case 'togglePause':
-				// TODO: your code here
-				break;
-		}
+	// What is inside request.dataType?
+	// Hope I know. See injected.js:sendToServiceWorker
+	console.log('we are in popup listener')
+	switch (request.dataType) {
+		case 'pause':
+		case 'play':
+			let songName = request.currentTrack.title
+			// console.log('song name is')
+			// console.log(songName)
+			// console.log('song position')
+			// console.log(request.progress.position)
+			// TODO: your code here
+			// sendStreamerEvent({action: request.dataType, position: request.currentTrack.})
+			break;
 	}
 })
 

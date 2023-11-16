@@ -10,6 +10,8 @@ let isStreaming = false
  * Listener for all incoming events from extension
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('chrome.runtime.listener request')
+    console.log(request)
     if (request.greeting === 'hello') {
         yandexTabID.push(sender.tab.id)
         console.log('added tab')

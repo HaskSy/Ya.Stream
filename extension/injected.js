@@ -15,16 +15,17 @@ window.addEventListener("message", function(event) {
         case 'play':
             console.log('playing track:')
             console.log(event.data.trackID)
-            playTrack(event.data.trackID);
+            playTrack(event.data.trackID, event.data.progress);
             break;
         case 'stop':
             console.log('track stopped')
+            playTrack(event.data.trackID, event.data.progress);
             stopCurrent();
             break;
         case 'goto':
             console.log('going to the time')
             console.log(event.data.progress)
-            gotoTime(event.data.progress);
+            playTrack(event.data.trackID, event.data.progress);
             break;
     }
     // dirty-dirty hack. See content-script.js:injectJS
@@ -39,8 +40,8 @@ window.addEventListener("message", function(event) {
  * This will send data right into popup.js
  */
 externalAPI.on(externalAPI.EVENT_TRACK, (event) => {
-    console.log('sending setCurrentTrack event')
-    sendToServiceWorker('setCurrentTrack')
+    console.log('sending \'play\' event')
+    sendToServiceWorker('play')
 })
 
 /**
@@ -67,7 +68,9 @@ function playPrevious() {
     // Do not send event from here about changed track
     let p = externalAPI.prev();
 }
-function playTrack(trackID) {
+function playTrack(trackID, progress) {
+    console.log('setting current progress to')
+    console.log(progress)
     // link looks like '/album/12345/track/54321'
     const regex = new RegExp('[0-9]+','g')
     let p = externalAPI.getCurrentTrack().link
@@ -78,19 +81,25 @@ function playTrack(trackID) {
     let playlistAndTrackID = trackID.split(':')
     if (currentAlbumID === playlistAndTrackID[0] && currentTrackID === playlistAndTrackID[1]){
         let p = externalAPI.togglePause(false);
+        gotoTime(progress);
     } else {
         externalAPI.navigate(`/album/${playlistAndTrackID[0]}/track/${playlistAndTrackID[1]}`)
-        setTimeout(() => {
-            document.getElementsByClassName('d-track_selected')[0].getElementsByClassName('button-play')[0].click()
-        }, 1000)
-    }
+            setTimeout(() => {
+                document
+                    .getElementsByClassName('d-track_selected')
+                    [0].getElementsByClassName('button-play')
+                    [0].click()
+                setTimeout(() => {
+                    gotoTime(progress)
 
-    sendToServiceWorker('togglePause')
+                },200)
+            }, 1000)
+    }
 }
 
 function stopCurrent() {
     let p = externalAPI.togglePause(true);
-    sendToServiceWorker('togglePause')
+    sendToServiceWorker('pause')
 }
 
 function gotoTime(time) {

@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener(request => {
             case 'next':
             case 'prev':
             case 'play':
-            case 'pause':
+            case 'stop':
             case 'goto':
                 window.postMessage(request, '*');
                 break;
