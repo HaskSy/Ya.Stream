@@ -1,5 +1,6 @@
 let extensionID = ""
 let port
+let lastTrackTime = 0
 
 window.addEventListener("message", function(event) {
     if (event.source !== window) { return; }
@@ -39,9 +40,22 @@ window.addEventListener("message", function(event) {
  * Subscribe on song change.
  * This will send data right into popup.js
  */
-externalAPI.on(externalAPI.EVENT_TRACK, (event) => {
+externalAPI.on(externalAPI.EVENT_TRACK, () => {
     console.log('sending \'play\' event')
     sendToServiceWorker('play')
+})
+
+externalAPI.on(externalAPI.EVENT_PROGRESS, () => {
+    let currentTrackTime = externalAPI.getProgress().position;
+    if (Math.abs(currentTrackTime - lastTrackTime) > 1) {
+       sendToServiceWorker('goto')
+    }
+    lastTrackTime = currentTrackTime
+})
+
+externalAPI.on(externalAPI.EVENT_STATE, () => {
+    let event = externalAPI.isPlaying() ? 'play' : 'stop'
+    sendToServiceWorker(event)
 })
 
 /**

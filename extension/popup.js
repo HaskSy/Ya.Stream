@@ -1,3 +1,4 @@
+export {State}
 /** -------------------- initializing -------------------- */
 
 /**
@@ -20,21 +21,18 @@ chrome.storage.local.get(['history']).then((historyObj) => {
     }
 })
 
-window.onload = async () => {
-	const urlParams = new URLSearchParams(window.location.search);
-	const token = urlParams.get('token');
-	if (token != null) {
-		State.setAuthenticated(token)
-	}
+document.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById("if_not_auth").style.display = "none"
 	refreshBtns();
-    if ((await State.getIsStreaming()) == true){
+	if ((await State.getIsStreaming()) == true){
 		ui_notifyStartStreaming();
 	}
 	else if ((await State.getIsListening()) != null){
 		ui_notifyStartListening(await State.getIsListening());
 	}
-}
+	setListeners();
+})
+
 
 /** // -------------------- initializing -------------------- */
 
@@ -119,7 +117,6 @@ function ui_notifyStopStreaming()
 	status_description.innerText = "Streaming is stoped";
 }
 
-setListeners();
 
 function setListeners() {
 	let switcher = document.getElementById("switcher");
@@ -297,8 +294,9 @@ async function sendStreamerEvent(actionEvent) {
 			} else {
 				throw new Error(`HTTP error while broadcastng event! Status: ${response.status}`);
 			}
-	  	}
-	  	console.log(`ActionEvent (${actionEvent}) sent succesfully. Status Code: ${response.status}`);
+	  	} else {
+			console.log(`ActionEvent (${actionEvent}) sent succesfully. Status Code: ${response.status}`);
+		}
 	})
 	.catch(error => {
 	  	console.error('ActionEvent fetching error:', error);
@@ -416,21 +414,33 @@ class StreamerService {
 }
 
 chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-	// What is inside request.dataType?
-	// Hope I know. See injected.js:sendToServiceWorker
-	console.log('we are in popup listener')
-	switch (request.dataType) {
-		case 'pause':
-		case 'play':
-			let songName = request.currentTrack.title
-			// console.log('song name is')
-			// console.log(songName)
-			// console.log('song position')
-			// console.log(request.progress.position)
-			// TODO: your code here
-			// sendStreamerEvent({action: request.dataType, position: request.currentTrack.})
-			break;
-	}
+	State.getIsStreaming().then((v) => { //aaa
+		if (v) {
+			// What is inside request.dataType?
+			// Hope I know. See injected.js:sendToServiceWorker
+			switch (request.dataType) {
+				case 'pause':
+				case 'play':
+				case 'goto':
+					console.log('we are in popup listener, trying to sendStreamerEvent. request is')
+					console.log(request)
+					const regex = new RegExp('[0-9]+','g')
+					let p = request.currentTrack.link
+					let iterator = p.matchAll(regex)
+					let currentAlbumID = iterator.next().value[0]
+					let currentTrackID = iterator.next().value[0]
+					let progress = Math.floor(request.progress.position)
+					sendStreamerEvent({
+						action: request.dataType,
+						position: progress,
+						trackId: `${currentAlbumID}:${currentTrackID}`,
+						timestamp: Date.now()
+					})
+					break;
+			}
+		}
+	})
+
 })
 
 function sendTestData(str) {
