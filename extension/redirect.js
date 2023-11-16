@@ -1,11 +1,11 @@
-import {State} from "./popup.js";
+import {State} from "./index.js";
 
 window.onload = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
-    console.log('it runs')
-    console.log(token)
+    console.log('redirect worked')
     if (token != null) {
-        State.setAuthenticated(token)
+        await State.setAuthenticated(token)
+        window.close()
     }
 }
