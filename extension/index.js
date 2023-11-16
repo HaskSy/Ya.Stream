@@ -1,4 +1,25 @@
 export {State}
+
+const broadcast = new BroadcastChannel('sw-ui-update');
+broadcast.onmessage = (event) => {
+	const msg = event.data;
+
+	console
+	switch (msg) {
+		case ListenEvents.START:
+			ui_notifyStartListening()
+			break;
+		case ListenEvents.STOP:
+			ui_notifyStopListening()
+			break;
+		case StreamEvents.START:
+			ui_notifyStartStreaming()
+			break;
+		case StreamEvents.STOP:
+			ui_notifyStopStreaming()
+			break;
+	}
+}
 /** -------------------- initializing -------------------- */
 
 /**
@@ -120,59 +141,45 @@ const auth_button = document.getElementById("authBtn");
 const normal_display = document.getElementById("if_auth");
 const not_auth_display = document.getElementById("if_not_auth");
 
-// TODO DELETE
-// const btn_test_play = document.getElementById("test_play")
-// const btn_test_stop = document.getElementById("test_stop")
-// const btn_test_goto_35s = document.getElementById("test_goto_35")
-// const btn_test_goto_0s = document.getElementById("test_goto_0")
-// END DELETE
-
 const btnArr = ['l1', 'l2', 'l3', 'l4', 'l5']
 
-function ui_notifyStartListening(userId)
-{
-	switcher.checked = false;
+async function ui_notifyStartListening() {
+	const userId = await State.getIsListening()
+	stream_switcher.checked = false;
 	status_description.innerText = "Now listening " + userId;
 	rearrangeBtns(userId);
 	listen_button.textContent = "Stop listening";
 }
 
-function ui_notifyStopListening()
-{
+function ui_notifyStopListening() {
 	status_description.innerHTML = "Listening is stoped";
 	listen_button.textContent = "Start listening";
 }
 
-function ui_notifyStartStreaming()
-{
-	switcher.checked = true;
+function ui_notifyStartStreaming() {
+	stream_switcher.checked = true;
 	status_description.innerHTML = "Now streaming";
 }
 
-function ui_notifyStopStreaming()
-{
-	switcher.checked = false;
+function ui_notifyStopStreaming() {
+	stream_switcher.checked = false;
 	status_description.innerText = "Streaming is stoped";
 }
 
 
 function setListeners() {
-	let switcher = document.getElementById("switcher");
-	switcher.addEventListener('click', async function() {
+	stream_switcher.addEventListener('click', async function() {
 		if (this.checked) {
 			if (!await State.isAuthenticated()){
 				normal_display.style.display = "none"
 				not_auth_display.style.display = "block"
 			}
 			else{
+				sendListenEvent(StreamEvents.STOP)
 				sendStreamerEvent(StreamEvents.START)
-				ui_notifyStartStreaming()
-				// StreamerService.startStreaming();
 			}
 		} else {
 			sendStreamerEvent(StreamEvents.STOP)
-			ui_notifyStopStreaming()
-			// StreamerService.stopStreaming();
 		}
 	});
 
@@ -180,7 +187,6 @@ function setListeners() {
     listen_button.addEventListener("click",async ()=> {
 		if ((await State.getIsListening()) != null){
 			sendListenEvent(ListenEvents.STOP)
-			ui_notifyStopListening()
 		}
 		else{
 			if (!await State.isAuthenticated()){
@@ -188,10 +194,9 @@ function setListeners() {
 				not_auth_display.style.display = "block"
 			}
 			else{
-				let  nextUser = text_form.value;
+				let nextUser = text_form.value;
 				if (nextUser !== ""){
 					sendListenEvent(ListenEvents.START, nextUser)
-					ui_notifyStartListening()
 				}
 			}
 		}
@@ -218,32 +223,10 @@ function setListeners() {
 	exitButton.addEventListener("click", () => {
 		sendListenEvent(ListenEvents.STOP)
 		sendStreamerEvent(StreamEvents.STOP)
-		ui_notifyStopListening()
-		ui_notifyStopStreaming()
-		// ListenerService.stopListening();
-		// StreamerService.stopStreaming();
 		State.setAuthenticated(null)
 		normal_display.style.display = "none"
 		not_auth_display.style.display = "block"
 	})
-
-	// TODO DELETE
-	// btn_test_play.addEventListener("click", () => {
-	// 	submitMockEvent(ActionTypes.PLAY)
-	// })
-	//
-	// btn_test_stop.addEventListener("click", () => {
-	// 	submitMockEvent(ActionTypes.STOP)
-	// })
-	//
-	// btn_test_goto_0s.addEventListener("click", () => {
-	// 	submitMockEvent(ActionTypes.GOTO)
-	// })
-	//
-	// btn_test_goto_35s.addEventListener("click", () => {
-	// 	submitMockEvent(ActionTypes.GOTO, 35)
-	// })
-	// END DELETE
 }
 
 async function rearrangeBtns(nextUser) {

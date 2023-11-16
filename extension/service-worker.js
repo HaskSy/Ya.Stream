@@ -1,5 +1,7 @@
 'use strict'
 
+const broadcast = new BroadcastChannel('sw-ui-update');
+
 /** here lies all tabs that are represented as yandex music */
 var yandexTabID = []
 let isStreaming = false
@@ -191,23 +193,17 @@ async function sendStreamerEvent(actionEvent) {
     const authToken = await State.getAuthenticated()
     console.log(authToken)
     try {
-
         fetch(`${url}?${params}`, {
             headers: {
                 Authorization: authToken,
                 "Content-Type": "application/json",
             },
-        })
-            .then(response => {
+        }).then(response => {
                 if (!response.ok) {
                     if (response.status === 401) {
                         State.setAuthenticated(null)
-                        // normal_display.style.display = "none"
-                        // not_auth_display.style.display = "block"
                         ListenerService.stopListening()
                         StreamerService.stopStreaming()
-                        // ui_notifyStopStreaming()
-                        // ui_notifyStopListening()
                     } else {
                         throw new Error(`HTTP error while broadcastng event! Status: ${response.status}`);
                     }
@@ -217,7 +213,7 @@ async function sendStreamerEvent(actionEvent) {
             })
             .catch(error => {
                 console.error('ActionEvent fetching error:', error);
-            });
+        });
     } catch (err) {
         console.error("FoundError")
         console.log(err)
@@ -246,6 +242,7 @@ class ListenerService {
     static #onOpenHandler = (e) => {
         console.log(`The connection with user "${this.currentUser}" has been (re)establised`);
         State.setIsListening(this.currentUser);
+        broadcast.postMessage('startListen')
         // ui_notifyStartListening(this.currentUser);
     }
     /**
@@ -260,7 +257,7 @@ class ListenerService {
         console.log('data is')
         console.log(data)
         // chrome.runtime.sendMessage({'action': data.event, 'trackID': data.track_id, 'progress': data.position})
-        chrome.tabs.sendMessage(yandexTabID[0],{'action': data.event, 'trackID': data.track_id, 'progress': data.position}, )
+        chrome.tabs.sendMessage(yandexTabID[0], {'action': data.event, 'trackID': data.track_id, 'progress': data.position})
     }
 
     /**
@@ -295,6 +292,7 @@ class ListenerService {
         this.currentUser = userId
         this.listenedSource = await createEventSourceListener(userId)
         this.#setListeners();
+        broadcast.postMessage("startListen")
     }
 
     /**
@@ -308,7 +306,7 @@ class ListenerService {
             delete this.listenedSource;
         }
         State.setIsListening(null)
-        // ui_notifyStopListening();
+        broadcast.postMessage("stopListen")
     }
 }
 
@@ -320,16 +318,13 @@ class ListenerService {
 class StreamerService {
     static startStreaming() {
         ListenerService.stopListening()
-        console.log("startStreaming")
-        // ui_notifyStopListening();
-        // ui_notifyStartStreaming();
         State.setIsStreaming(true)
+        broadcast.postMessage("startStream")
     }
 
     static stopStreaming() {
-        console.log("stopStreaming")
-        // ui_notifyStopStreaming();
         State.setIsStreaming(false)
+        broadcast.postMessage("stopStream")
     }
 }
 
