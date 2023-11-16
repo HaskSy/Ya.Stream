@@ -8,11 +8,7 @@
         "default_popup":"popup.html"
     },
     "permissions": [
-        "tabs",
-        "notifications",
-        "storage",
-        "system.display",
-        "sidePanel"
+        "storage"
     ],
     "background":{
         "service_worker": "background.js"
@@ -33,7 +29,7 @@
     ],
     "web_accessible_resources": [ {
         "matches": [ "https://music.yandex.ru/*" ],
-        "resources": [ "background.js", "controls-backend.js", "content_script.js" , "injected.js"],
+        "resources": [ "injected.js"],
         "use_dynamic_url": true
     } ],
     "content_security_policy": {

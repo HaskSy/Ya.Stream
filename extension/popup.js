@@ -1,3 +1,4 @@
+export {State}
 /** -------------------- initializing -------------------- */
 
 /**
@@ -122,7 +123,7 @@ function ui_notifyStopStreaming()
 setListeners();
 
 function setListeners() {
-	switcher = document.getElementById("switcher");
+	let switcher = document.getElementById("switcher");
 	switcher.addEventListener('click', async function() {
 		if (this.checked) {
 			if (!await State.isAuthenticated()){
@@ -148,7 +149,7 @@ function setListeners() {
 				not_auth_display.style.display = "block"
 			}
 			else{
-				nextUser = text_form.value;
+				let  nextUser = text_form.value;
 				if (nextUser != ""){
 					ListenerService.startListening(nextUser);
 				}
@@ -157,7 +158,7 @@ function setListeners() {
     })
 
     btnArr.forEach(element => {
-        last5btn = document.getElementById(element);
+        let last5btn = document.getElementById(element);
         last5btn.addEventListener("click",async ()=> {
             text_form.value = document.getElementById(element).textContent;
         })
@@ -197,8 +198,8 @@ function setListeners() {
 }
 
 async function rearrangeBtns(nextUser) {
-    historyArr = (await chrome.storage.local.get(['history']))['history'];
-    nextUserIndex = historyArr.indexOf(nextUser);
+    let historyArr = (await chrome.storage.local.get(['history']))['history'];
+    let nextUserIndex = historyArr.indexOf(nextUser);
     if (nextUserIndex != -1){
         historyArr.splice(nextUserIndex, 1);
     }
@@ -212,9 +213,9 @@ async function rearrangeBtns(nextUser) {
 }
 
 async function refreshBtns() {
-    historyArr = (await chrome.storage.local.get(['history']))['history']
+    let historyArr = (await chrome.storage.local.get(['history']))['history']
     for (let index = 0; index < btnArr.length; index++) {
-        lastBtn = document.getElementById(btnArr[index]);
+        let lastBtn = document.getElementById(btnArr[index]);
         lastBtn.textContent = historyArr[index];
     }
 }
@@ -228,7 +229,7 @@ async function refreshBtns() {
  * Uniform object which is getting send to be broadcasted
  * @typedef {Object} ActionEvent
  * @property {keyof ActionTypes} action
- * @property {number} trackId
+ * @property {String} trackId albumID:trackID
  * @property {number} position
  * @property {number} timestamp
  */
@@ -337,7 +338,9 @@ class ListenerService {
      * @param {MessageEvent<ActionEvent>} event - Message event.
      * @returns {void}
      */
-  	static #onMessageHandler = (event) => console.log(event.data);
+  	static #onMessageHandler = (event) => {
+		chrome.runtime.sendMessage({'action': event.data.action, 'trackID': event.data.trackId, 'progress': event.data.position})
+	}
 
 	/**
      * Event handler for errors.
