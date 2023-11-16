@@ -4,9 +4,12 @@ import org.apache.tomcat.util.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
@@ -15,6 +18,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.time.Duration;
 
 @Service
 @Transactional
@@ -32,7 +36,8 @@ public class UserService {
     }
 
     public User authenticateByYandexToken(@NotNull String yandexToken) throws NotAuthorizedException {
-        YandexUserDto yandexUser = verifyYandexUserIdentity(yandexToken).orElseThrow(() -> new NotAuthorizedException("Yandex identity failed to verify"));
+        YandexUserDto yandexUser = verifyYandexUserIdentity(yandexToken).orElseThrow(() ->
+                new ResponseStatusException(HttpStatusCode.valueOf(403), "Wrong yandex auth"));
         User user = userRepository.findById(yandexUser.id()).orElse(null);
         if (user == null) {
             user = new User();
@@ -52,7 +57,10 @@ public class UserService {
 
     private Optional<YandexUserDto> verifyYandexUserIdentity(@NotNull String yandexToken) {
         try {
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplateBuilder builder = new RestTemplateBuilder();
+            builder.setConnectTimeout(Duration.ofMillis(500));
+            builder.setReadTimeout(Duration.ofMillis(500));
+            RestTemplate restTemplate = builder.build();
             HttpHeaders headers = new HttpHeaders();
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             headers.add("Authorization", "OAuth " + yandexToken);
@@ -62,6 +70,8 @@ public class UserService {
             return Optional.of(new YandexUserDto(json.getLong("id"), json.getString("login")));
         } catch (JSONException e) {
             return Optional.empty();
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatusCode.valueOf(503), "Yandex identity failed to verify");
         }
     }
 
