@@ -6,11 +6,13 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.security.enterprise.credential.Password;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotAuthorizedException;
@@ -44,15 +46,12 @@ public class UserService {
             user.setId(yandexUser.id());
             user.setYandexLogin(yandexUser.login());
         }
-        user.setToken(generateAuthenticationToken());
+        user.setToken(generateAuthenticationToken(yandexToken));
         return userRepository.save(user);
     }
 
-    private static String generateAuthenticationToken() {
-        Random random = ThreadLocalRandom.current();
-        byte[] r = new byte[128];
-        random.nextBytes(r);
-        return Base64.encodeBase64String(r);
+    private static String generateAuthenticationToken(String seed) {
+        return new BCryptPasswordEncoder().encode(seed);
     }
 
     private Optional<YandexUserDto> verifyYandexUserIdentity(@NotNull String yandexToken) {
