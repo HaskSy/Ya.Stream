@@ -39,5 +39,31 @@ public class Event {
     @Getter() @Setter()
     private User user;
 
+    public static Event play(User user, String trackId, String timecode) {
+        Event event = new Event();
+        event.setType("play");
+        event.setUser(user);
+        event.setTrackId(trackId);
+        event.setTimecode(timecode);
+        return event;
+    }
+
+    public static Event stop(User user, String trackId, String timecode) {
+        Event event = new Event();
+        event.setType("stop");
+        event.setUser(user);
+        event.setTrackId(trackId);
+        event.setTimecode(timecode);
+        return event;
+    }
+
+    public static Event _goto(User user, String trackId, String timecode) {
+        Event event = new Event();
+        event.setType("goto");
+        event.setUser(user);
+        event.setTrackId(trackId);
+        event.setTimecode(timecode);
+        return event;
+    }
 }
 
