@@ -80,6 +80,32 @@ public class SseBus {
         failedEmitters.forEach(this.emitters.get(user.getYandexLogin())::remove);
     }
 
+    public void demo(SseEmitter emitter) {
+
+        System.out.println("new demo");
+
+        emitter.onTimeout(emitter::complete);
+
+        User demoUser = new User();
+        demoUser.setId(1L);
+        demoUser.setYandexLogin("demo");
+        (new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+                emitter.send(eventAsString(Event.play(demoUser, "23157104:106317038", "120")));
+                Thread.sleep(11000);
+                emitter.send(eventAsString(Event.play(demoUser, "5551948:42125196", "169")));
+                Thread.sleep(11000);
+                emitter.send(eventAsString(Event.play(demoUser, "3369429:28192686", "150")));
+                Thread.sleep(25000);
+                emitter.send(eventAsString(Event.stop(demoUser, "3369429:28192686", "0")));
+            } catch (InterruptedException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        })).start();
+    }
+
+
     private String eventAsString(Event event) {
         JSONObject object = new JSONObject();
         object.put("event", event.getType());
