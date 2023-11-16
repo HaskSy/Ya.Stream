@@ -32,6 +32,10 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    public Optional<User> getUserByYandexId(Long yandexId) {
+        return userRepository.findById(yandexId);
+    }
+
     public Optional<User> getUserByYandexLogin(String yandexLogin) {
         return userRepository.findByYandexLogin(yandexLogin);
     }
@@ -40,11 +44,12 @@ public class UserService {
         return userRepository.findByToken(token);
     }
 
+
     public User authenticateByYandexToken(@NotNull String yandexToken) throws NotAuthorizedException {
         log.info("performing verification of yandex token");
         YandexUserDto yandexUser = verifyYandexUserIdentity(yandexToken).orElseThrow(() ->
                 new ResponseStatusException(HttpStatusCode.valueOf(403), "Wrong yandex auth"));
-        User user = userRepository.findById(yandexUser.id()).orElse(null);
+        User user = this.getUserByYandexId(yandexUser.id()).orElse(null);
         if (user == null) {
             user = new User();
             user.setId(yandexUser.id());
