@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Slf4j
 public class XHeaderAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
@@ -30,6 +32,7 @@ public class XHeaderAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String xAuth = request.getHeader("Authorization");
+        logger.info("login with header = " + xAuth);
         if (xAuth != null) {
             var user = userService.authenticateByToken(xAuth);
             if (user.isPresent()) {
