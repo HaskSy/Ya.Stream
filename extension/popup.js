@@ -16,11 +16,12 @@ let config = {
 /** Initializing history of last subscribed on users if there is no such */
 chrome.storage.local.get(['history']).then((historyObj) => {
     if (historyObj['history'] === undefined) {
-        chrome.storage.local.set({history: ["empty", "empty", "empty", "empty", "empty"]}).then(() => console.log("Setting succesfully"));
+        chrome.storage.local.set({history: ["", "", "", "", ""]}).then(() => console.log("Setting succesfully"));
     }
 })
 
 window.onload = async () => {
+	text_form.value = await State.getTextFormContent();
 	const urlParams = new URLSearchParams(window.location.search);
 	const token = urlParams.get('token');
 	if (token != null) {
@@ -78,6 +79,15 @@ class State {
 
 	static async isAuthenticated() {
 		return (null !== await this.getAuthenticated())
+		
+	}
+
+	static setTextFormContent(text_content) {
+		chrome.storage.local.set({textContent: text_content}).then(() => "Setting succesfully");
+	}
+
+	static async getTextFormContent() {
+		return (await chrome.storage.local.get(['textContent']))['textContent'];
 	}
 }
 
@@ -87,14 +97,12 @@ function ui_notifyStartListening(user_id)
 	status_description.innerText = "Now listening " + user_id;
 	rearrangeBtns(user_id);
 	listen_button.textContent = "Stop listening";
-	listen_button.style.background = "linear-gradient(#e10101, #e10101)";
 }
 
 function ui_notifyStopListening()
 {
 	status_description.innerHTML = "Listening is stoped";
 	listen_button.textContent = "Start listening";
-	listen_button.style.background = "linear-gradient(#01a9e1, #5bc4bc)";
 }
 
 function ui_notifyStartStreaming()
@@ -185,6 +193,10 @@ function listener(){
 		login();
 		normal_display.style.display = "block"
 		not_auth_display.style.display = "none"
+    })
+
+	text_form.addEventListener('change', async () => {
+		State.setTextFormContent(text_form.value);
     })
 }
 
@@ -318,7 +330,10 @@ class ListenerService {
      * @param {Event} error - Generic error event.
      * @returns {void}
      */
-	static #onErrorHandler = (error) => console.error(error);
+	static #onErrorHandler = (error) => {
+		alert("User not found");
+		stopListening();
+	};
 
 	static #setListeners() {
 		this.listenedSource.addEventListener("open", this.#onOpenHandler)
