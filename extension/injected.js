@@ -1,6 +1,6 @@
-let extensionID = ""
-let port
-let lastTrackTime = 0
+var extensionID = ""
+// var port
+var lastTrackTime = 0
 
 window.addEventListener("message", function(event) {
     if (event.source !== window) { return; }
@@ -20,7 +20,7 @@ window.addEventListener("message", function(event) {
             break;
         case 'stop':
             console.log('track stopped')
-            playTrack(event.data.trackID, event.data.progress);
+            // playTrack(event.data.trackID, event.data.progress);
             stopCurrent(event.data.trackID, event.data.progress);
             break;
         case 'goto':
@@ -32,7 +32,7 @@ window.addEventListener("message", function(event) {
     // dirty-dirty hack. See content-script.js:injectJS
     if (event.data.id) {
         extensionID = event.data.id
-        port = chrome.runtime.connect(extensionID)
+        // port = chrome.runtime.connect(extensionID)
     }
 })
 
@@ -93,9 +93,8 @@ function navigateTo(trackID, progress){
 
     let playlistAndTrackID = trackID.split(':')
     if (currentAlbumID === playlistAndTrackID[0] && currentTrackID === playlistAndTrackID[1]){
-        let p = externalAPI.togglePause(false);
-        gotoTime(progress);
-        return Promise.resolve()
+        // let p = externalAPI.togglePause(false);
+        return gotoTime(progress, true);
     } else {
         externalAPI.navigate(`/album/${playlistAndTrackID[0]}/track/${playlistAndTrackID[1]}`)
         return new Promise((resolve, reject) => {
@@ -105,10 +104,9 @@ function navigateTo(trackID, progress){
                     [0].getElementsByClassName('button-play')
                     [0].click()
                 setTimeout(() => {
-                    gotoTime(progress, true)
+                    gotoTime(progress, true).then(resolve)
                 },200)
             }, 1000)
-            resolve()
         })
     }
 }
@@ -121,7 +119,7 @@ function playTrack(trackID, progress) {
 function stopCurrent(trackID, progress) {
     navigateTo(trackID, progress).then(() => {
         let p = externalAPI.togglePause(true);
-        sendToServiceWorker('pause')
+        sendToServiceWorker('stop')
     })
 }
 
@@ -129,17 +127,22 @@ function gotoTime(time, targetState = undefined) {
     if (targetState === undefined){
         targetState = externalAPI.isPlaying()
     }
+    console.log(`targetState: ${targetState}`)
     let res = externalAPI.setPosition(time)
     //TODO: website won't work normally if you did not clicked at something on the page
     // How we can bypass it?
     if (time !== res) {
         console.log('somebody must start the track first')
         // document.getElementsByClassName('player-controls__btn_play')[0].click()
-        externalAPI.play().then(()=> {
-            externalAPI.setPosition(time)
-            setTimeout(() => {
-                externalAPI.togglePause(!targetState)
-            }, 100)
+        return new Promise((resolve, reject) => {
+            externalAPI.play().then(()=> {
+                externalAPI.setPosition(time)
+                setTimeout(() => {
+                    externalAPI.togglePause(!targetState)
+                    resolve()
+                }, 200)
+            })
         })
     }
+    return Promise.resolve()
 }

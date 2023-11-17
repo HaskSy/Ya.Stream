@@ -1,13 +1,21 @@
 'use strict'
+function main() {
+    /** This method call event listener in service-worker to register new music tab*/
+    chrome.runtime.sendMessage({ greeting: 'hello' })
+    chrome.runtime.onMessage.addListener(handleEvent)
 
-/** These two methods call event listener in service-worker to register new music tab*/
-chrome.runtime.sendMessage({ greeting: 'hello' })
+    chrome.runtime.sendMessage({greeting: 'getID'}, (response) => {
+        injectJS(response.id);
+    })
 
-window.onbeforeunload = () => {
-    chrome.runtime.sendMessage({ greeting: 'bye' })
+    window.onbeforeunload = () => {
+        if (chrome.runtime?.id) {
+            chrome.runtime.sendMessage({ greeting: 'bye' })
+        }
+    }
 }
 
-chrome.runtime.onMessage.addListener(request => {
+function handleEvent(request) {
     if (request) {
         let payload = request.payload
 
@@ -20,17 +28,27 @@ chrome.runtime.onMessage.addListener(request => {
                 window.postMessage(request, '*');
                 break;
             default:
-                console.log('something strange in content-script in chrome.runtime.onMessage')
+                console.log('something strange in content-script in content-script.onMessage')
                 console.log(request.action)
         }
     }
-})
+}
+
 /**
  * Because we cannot call objects on the page, we need this injection
  */
-let injectJS = (id) =>{
+let injectJS = (id) => {
+    let scriptURL = chrome.runtime.getURL('injected.js');
+    let docs = document.getElementsByTagName('script')
+    for (const doc of docs) {
+        if (doc.src === scriptURL){
+            doc.remove()
+            console.log(`Node with script deleted, but content-script is already running in this tab. There will be many events for this one`)
+        }
+    }
+
     let scriptElem = document.createElement('script');
-    scriptElem.src = chrome.runtime.getURL('injected.js');
+    scriptElem.src = scriptURL;
     scriptElem.onload = () => {
         window.postMessage({id: id})
         // this.remove();
@@ -39,8 +57,4 @@ let injectJS = (id) =>{
     console.log('js injected')
 }
 
-chrome.runtime.sendMessage({greeting: 'getID'}, (response) => {
-    console.log('response return id')
-    console.log(response.id)
-    injectJS(response.id);
-})
+main()

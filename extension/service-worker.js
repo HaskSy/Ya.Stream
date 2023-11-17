@@ -3,20 +3,31 @@
 const broadcast = new BroadcastChannel('sw-ui-update');
 
 /** here lies all tabs that are represented as yandex music */
-var yandexTabID = []
+let yandexTabID = []
 let isStreaming = false
+
+/**
+ * Configuration object properties
+ * @typedef {Object} ExtentionConfig
+ * @property {string} config.baseApiUrl - API Path
+ * @property {string} authTokenStorageLocation - specifies the key of Authorization Basic token in chrome.storage
+ */
+
+/** @type {ExtentionConfig} */
+let config = {
+    "baseApiUrl": "https://music.gvsem.com",
+    "authTokenStorageLocation": "authToken"
+}
 
 /**
  * Listener for all incoming events from extension
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('chrome.runtime.listener request')
+    console.log('[service-worker] listener request:')
     console.log(request)
     switch (request.greeting) {
         case 'hello':
             yandexTabID.push(sender.tab.id)
-            console.log('added tab')
-            console.log(sender.tab.id)
             break;
         case 'bye':
             yandexTabID = yandexTabID.filter(item => item !== sender.tab.id)
@@ -26,17 +37,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({id: extensionID})
             break;
         case 'startListen':
-            console.log(`listening started for user ${request.username}`)
             State.setIsListening(request.username)
             ListenerService.startListening(request.username)
             break;
         case 'stopListen':
-            console.log('listening stopped')
             State.setIsListening(null)
             ListenerService.stopListening()
             break;
         case 'startStream':
-            console.log('streaming started')
             State.setIsStreaming(true)
             StreamerService.startStreaming()
             break;
@@ -80,19 +88,6 @@ function handlePlayerEvents(event) {
     } else {
         chrome.tabs.sendMessage(yandexTabID[0], event)
     }
-}
-
-/**
- * Configuration object properties
- * @typedef {Object} ExtentionConfig
- * @property {string} config.baseApiUrl - API Path
- * @property {string} authTokenStorageLocation - specifies the key of Authorization Basic token in chrome.storage
- */
-
-/** @type {ExtentionConfig} */
-let config = {
-    "baseApiUrl": "https://music.gvsem.com",
-    "authTokenStorageLocation": "authToken"
 }
 
 /** Initializing history of last subscribed on users if there is no such */
@@ -174,8 +169,7 @@ const ActionTypes = {
  */
 async function createEventSourceListener(userId) {
     const url = `${config.baseApiUrl}/listen/${userId}`;
-    const eventSource = new EventSource(url);
-    return eventSource;
+    return new EventSource(url);
 }
 
 /*
@@ -257,7 +251,8 @@ class ListenerService {
         console.log('data is')
         console.log(data)
         // chrome.runtime.sendMessage({'action': data.event, 'trackID': data.track_id, 'progress': data.position})
-        chrome.tabs.sendMessage(yandexTabID[0], {'action': data.event, 'trackID': data.track_id, 'progress': data.position})
+        console.log(`yandexTabID is ${yandexTabID.length}`)
+        chrome.tabs.sendMessage(yandexTabID[0],{'action': data.event, 'trackID': data.track_id, 'progress': data.position}, )
     }
 
     /**
@@ -363,3 +358,23 @@ function sendTestData(str) {
 }
 
 /** //-------------------- streamer-service.js -------------------- */
+
+/**
+ * If extension is loaded first time, try to inject all pages with content script
+ */
+chrome.runtime.onInstalled.addListener(async () => {
+    for (const cs of chrome.runtime.getManifest().content_scripts) {
+        for (const tab of await chrome.tabs.query({url:[
+                    "*://*.music.yandex.ru/*",
+                    "*://*.music.yandex.com/*",
+                    "*://*.music.yandex.ua/*",
+                    "*://*.music.yandex.by/*"
+            ]})) {
+
+            chrome.scripting.executeScript({
+                target: {tabId: tab.id},
+                files: cs.js,
+            });
+        }
+    }
+    });
