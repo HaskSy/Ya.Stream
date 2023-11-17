@@ -126,6 +126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		ui_notifyStartListening(await State.getIsListening());
 	}
 	setListeners();
+
+	text_form.value = await State.getTextFormContent()
 })
 
 /** // -------------------- initializing -------------------- */
