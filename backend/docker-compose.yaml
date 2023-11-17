@@ -14,8 +14,8 @@ services:
       unless-stopped
     volumes:
       - ./data:/home/app/data
-    expose:
-      - 7001
+    ports:
+      - "7001:7001"
     depends_on:
       - postgres
 
